@@ -49,25 +49,63 @@ class MeshExporter(bpy.types.Operator):
     // indexBuffer (nIndices * indexSize)
     """
     bio = BytesIO()
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.mesh.quads_convert_to_tris() # TODO: copy mesh before
+    bpy.ops.object.mode_set(mode='OBJECT')
+
     obj = bpy.context.selected_objects[0]
     assert obj.type == 'MESH'
     mesh = obj.data
     vertices = [[vertex.co, vertex.normal] for vertex in mesh.vertices]
+    index_vert = len(vertices)
     indices = []
     if self.includeCoords:
       uv_data = mesh.uv_textures[0].data
       uvs = []
     for index, face in enumerate(mesh.faces):
-      if len(face.vertices) == 4:
-        indices.extend(face.vertices[:3])
-        indices.extend(face.vertices[2:4])
-        indices.append(face.vertices[0])
-      else:
+      if not self.includeCoords:
         indices.extend(face.vertices)
-      if self.includeCoords:
-        for i in range(len(face.vertices)):
-          if len(vertices[face.vertices[i]]) == 2:
-            vertices[face.vertices[i]].append(uv_data[index].uv_raw[i*2 : i*2+2])
+      else:
+        coords = uv_data[index]
+        vertex = vertices[face.vertices[0]]
+        if len(vertex) == 2:
+          vertex.append(coords.uv1)
+          indices.append(face.vertices[0])
+        elif vertex[2] != coords.uv1:
+          vertex = vertex[:]
+          vertex[2] = coords.uv1
+          vertices.append(vertex)
+          indices.append(index_vert)
+          index_vert += 1
+        else:
+          indices.append(face.vertices[0])
+
+        vertex = vertices[face.vertices[1]]
+        if len(vertex) == 2:
+          vertex.append(coords.uv2)
+          indices.append(face.vertices[1])
+        elif vertex[2] != coords.uv2:
+          vertex = vertex[:]
+          vertex[2] = coords.uv2
+          vertices.append(vertex)
+          indices.append(index_vert)
+          index_vert += 1
+        else:
+          indices.append(face.vertices[1])
+
+        vertex = vertices[face.vertices[2]]
+        if len(vertex) == 2:
+          vertex.append(coords.uv3)
+          indices.append(face.vertices[2])
+        elif vertex[2] != coords.uv3:
+          vertex = vertex[:]
+          vertex[2] = coords.uv3
+          vertices.append(vertex)
+          indices.append(index_vert)
+          index_vert += 1
+        else:
+          indices.append(face.vertices[2])
 
     with open(self.filepath, 'wb') as f:
       f.write(pack('<I', 1))              # version

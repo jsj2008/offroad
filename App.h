@@ -4,15 +4,14 @@
 #include <QtOpenGL>
 #include <QElapsedTimer>
 
-class btVehicleTuning;
-struct btVehicleRaycaster;
-class btCollisionShape;
-
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
 #include <BulletCollision/CollisionShapes/btConcaveShape.h>
-#include <BulletDynamics/Vehicle/btRaycastVehicle.h>
-#include <debug-drawer/GLDebugDrawer.h>
+#include <btBulletWorldImporter.h>
+
+#include <vehicle/btRaycastVehicle.h>
+
+#include <debug-drawer/GLDebugDrawer.h> // TODO: perfomance!
 
 class FirstPersonCamera;
 class Renderer;
@@ -22,11 +21,44 @@ class IndexBuffer;
 class Shader;
 class Texture;
 
+class ConfigurationWindow;
+
+class BlenderScene {
+public:
+  BlenderScene(const char* fileName, btDynamicsWorld* world, Renderer* renderer);
+  ~BlenderScene();
+
+  void draw(qint64 delta);
+
+private:
+  btBulletWorldImporter* importer;
+  btDynamicsWorld* world;
+  Renderer* renderer;
+
+  struct RenderableObject {
+    RenderableObject() {
+      mesh = NULL; // TODO: nulptr?
+      color = NULL;
+      normal = NULL;
+      shader = NULL;
+      body = NULL;
+    }
+
+    Mesh* mesh;
+    Texture* color;
+    Texture* normal;
+    Shader* shader;
+    btRigidBody* body;
+  };
+
+  QList<RenderableObject> objects;
+};
+
 class App : public QGLWidget {
   Q_OBJECT
 
 public:
-  App(const QGLFormat& format, QWidget* parent);
+  App(const QGLFormat& format, ConfigurationWindow* configWin);
   ~App();
 
 private:
@@ -41,16 +73,29 @@ private:
   void setupPhysics();
   void cleanUpPhysics();
 
+  ConfigurationWindow* configWin;
   Renderer* renderer;
   Mesh* wheel;
   Mesh* truck;
+  Mesh* skyDome;
   Texture* wheelTexture;
   Shader* diffuse;
   Shader* wheelShader;
+  Shader* scattering;
+  Shader* terrainShader;
+  VertexBuffer* terrainVB;
+  IndexBuffer* terrainIB;
+  Texture* grass;
+  GLuint heightfieldId;
+  float vehicleCamRotation;
+
+  BlenderScene* scene;
+
   FirstPersonCamera* cam;
   QElapsedTimer* timer;
 
-  bool state;
+  bool mouseFree;
+  bool vehicleCam;
 
   btDynamicsWorld* dynamicsWorld;
   btRigidBody* chassis;
@@ -58,7 +103,6 @@ private:
   btCollisionDispatcher* dispatcher;
   btConstraintSolver* constraintSolver;
   btDefaultCollisionConfiguration* collisionConfiguration;
-  //btTriangleIndexVertexArray* indexVertexArrays;
 
   btRaycastVehicle::btVehicleTuning tuning;
   btVehicleRaycaster* vehicleRaycaster;
@@ -68,16 +112,30 @@ private:
   btRigidBody* groundBody;
   btCollisionShape* groundShape;
   float* heightfield;
+  int heightfieldWidth;
+  int heightfieldHeight;
+  float yTrans;
 
   GLDebugDrawer* debugDrawer;
   bool drawDebugInfo;
 
   bool accelerating, breaking, steeringLeft, steeringRight;
   float engineForce, breakingForce, vehicleSteering;
+  const float maxSteering;
 };
 
-class LocationSlider : public QSlider {
+class PointerSlider : public QSlider {
   Q_OBJECT
+
+public:
+  PointerSlider(float* var, float min, float max);
+
+private slots:
+  void updateVar(int value);
+
+private:
+  float* var;
+  float min, max;
 };
 
 class ConfigurationWindow : public QWidget {
@@ -85,10 +143,10 @@ class ConfigurationWindow : public QWidget {
 
 public:
   ConfigurationWindow();
+  ~ConfigurationWindow();
 
-  void addSliderValue(const char* name, float* var);
+  void addPointerValue(const char* name, float* var, float min, float max);
 
 private:
-  //LocationSlider* xSlider;
-  //LocationSlider* ySlider;
+  QGridLayout* mainLayout;
 };

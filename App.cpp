@@ -15,7 +15,6 @@
 typedef QVector2D vec2;
 typedef QVector3D vec3;
 typedef QVector4D vec4;
-typedef QMatrix3x3 mat3;
 typedef QMatrix4x4 mat4;
 
 #include <FirstPersonCamera.h>
@@ -26,6 +25,11 @@ public:
   load_exception(const std::string& message) : std::runtime_error(message) {}
   load_exception(const QString& message) : std::runtime_error(message.toUtf8().constData()) {}
 };
+
+template <class T>
+T clamp(const T& value, const T& low, const T& high) {
+  return value < low ? low : (value > high ? high : value);
+}
 
 void checkErrors() {
   using namespace std;
@@ -124,6 +128,10 @@ public:
   }
 
   Shader* addShader(const char* fileName) {
+    QString fullPath = QFileInfo(fileName).absoluteFilePath();
+    if (loadedShaders.contains(fullPath))
+      return loadedShaders[fullPath];
+
     QDomDocument doc;
     QFile file(fileName);
 
@@ -133,10 +141,13 @@ public:
       throw load_exception(error.toStdString());
     }
 
-    if (!doc.setContent(&file)) {
+    QString msg;
+    if (!doc.setContent(&file, false, &msg)) {
       file.close();
-      QString error = "Error while loading file ";
+      QString error = "Error loading file ";
       error += fileName;
+      error += " [";
+      error += msg + "]";
       throw load_exception(error.toStdString());
     }
 
@@ -153,8 +164,6 @@ public:
       else if (e.attribute("type") == "pixel" || e.attribute("type") == "fragment")
         pixelShaderSource = e.text();
     }
-
-
 
     GLuint program = glCreateProgram();
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -221,6 +230,8 @@ public:
     shader->vertexShader = vertexShader;
     shader->pixelShader = pixelShader;
     this->shaders << shader;
+
+    loadedShaders[fullPath] = shader;
     return shader;
   }
 
@@ -238,6 +249,10 @@ public:
   }
 
   Texture* addTexture(const char* fileName) {
+    QString fullPath = QFileInfo(fileName).absoluteFilePath();
+    if (loadedTextures.contains(fullPath))
+      return loadedTextures[fullPath];
+
     GLuint id;
     QImage img;
     QImage glImg;
@@ -261,7 +276,8 @@ public:
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
             glImg.width(), glImg.height(),
             0, GL_RGBA, GL_UNSIGNED_BYTE, glImg.bits());
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     Texture* texture = new Texture;
@@ -269,6 +285,9 @@ public:
     texture->height = glImg.height();
     texture->width = glImg.width();
     textures << texture;
+
+    loadedTextures[fullPath] = texture;
+    std::cout << "Loaded texture " << fileName << std::endl;
     return texture;
   }
 
@@ -300,6 +319,14 @@ public:
   void disableShaders() {
     glUseProgram(0);
     currentProgram = 0;
+  }
+
+  void setUniform(const char* name, double value) {
+    glUniform1f(glGetUniformLocation(currentProgram, name), value);
+  }
+
+  void setUniform(const char* name, float value) {
+    glUniform1f(glGetUniformLocation(currentProgram, name), value);
   }
 
   void setUniform(const char* name, const vec2& value) {
@@ -336,6 +363,11 @@ public:
     // indexSize          |
     // vertexBuffer (nVertices * vertexSize)
     // indexBuffer (nIndices * indexSize)
+
+    QString fullPath = QFileInfo(fileName).absoluteFilePath();
+    if (loadedMeshes.contains(fullPath))
+      return loadedMeshes[fullPath];
+
     std::ifstream file;
     file.open(fileName, std::ios::binary);
 
@@ -408,6 +440,7 @@ public:
     mesh->vao = vao;
     meshes << mesh;
 
+    loadedMeshes[fullPath] = mesh;
     std::cout << "Mesh " << fileName << " loaded." << std::endl;
     return mesh;
   }
@@ -445,19 +478,31 @@ private:
   QList<VertexBuffer*> vertexBuffers;
   QList<Mesh*> meshes;
 
+  QHash<QString, Shader*> loadedShaders;
+  QHash<QString, Texture*> loadedTextures;
+  QHash<QString, Mesh*> loadedMeshes;
+
   GLuint currentProgram;
 };
 
-
-App::App(const QGLFormat& format, QWidget* parent = 0) : QGLWidget(format, parent) {
+App::App(const QGLFormat& format, ConfigurationWindow* configWin) : QGLWidget(format, 0), maxSteering(0.5) {
+  this->configWin = configWin;
   renderer = NULL;
   cam = NULL;
   timer = NULL;
   drawDebugInfo = false;
+  accelerating = breaking = steeringLeft = steeringRight = false;
+  vehicleCam = false;
+  engineForce = breakingForce = vehicleSteering = 0;
+  mouseFree = true;
+  vehicleCamRotation = 0;
 }
 
 App::~App() {
   this->cleanUpPhysics();
+
+  if (scene)
+    delete scene;
 
   if (renderer)
     delete renderer;
@@ -476,7 +521,6 @@ void App::initializeGL() {
   this->setCursor(Qt::BlankCursor);
   timer = new QElapsedTimer();
   timer->start();
-  state = true;
 
   GLenum err = glewInit();
   if (GLEW_OK != err) {
@@ -510,6 +554,99 @@ void App::initializeGL() {
     diffuse = renderer->addShader("content/diffuse.shader");
     wheelShader = renderer->addShader("content/wheel.shader");
     wheelTexture = renderer->addTexture("content/truck-tex.jpg");
+    skyDome = renderer->addMesh("content/sky-dome.mesh");
+    scattering = renderer->addShader("content/scattering.shader");
+    terrainShader = renderer->addShader("content/terrain.shader");
+    grass = renderer->addTexture("content/grass.jpg");
+
+    this->setupPhysics();
+
+    scene = new BlenderScene("content/random.scene", dynamicsWorld, renderer);
+
+    // TODO: cleanup this mess
+    float contrib = 1.f / 6;
+    float* normals = new float[heightfieldWidth*heightfieldHeight*3];
+    memset(normals, 0, heightfieldWidth*heightfieldHeight*3*sizeof(float));
+    for (int i = 1; i < heightfieldWidth-1; i++) {
+      for (int j = 1; j < heightfieldHeight-1; j++) {
+        vec3 a,b,c;
+        a = vec3(i, heightfield[i*heightfieldHeight+j], j);
+        b = vec3(i+1, heightfield[(i+1)*heightfieldHeight+j], j);
+        c = vec3(i, heightfield[i*heightfieldHeight+j+1], j+1);
+        vec3 v1 = b-a;
+        vec3 v2 = c-a;
+        vec3 normal = -QVector3D::crossProduct(v1, v2).normalized();
+        float x = normal.x() * contrib, y = normal.y() * contrib, z = normal.z() * contrib;
+        normals[(i*heightfieldHeight+j)*3+0] += x;
+        normals[(i*heightfieldHeight+j)*3+1] += y;
+        normals[(i*heightfieldHeight+j)*3+2] += z;
+
+        normals[((i+1)*heightfieldHeight+j)*3+0] += x;
+        normals[((i+1)*heightfieldHeight+j)*3+1] += y;
+        normals[((i+1)*heightfieldHeight+j)*3+2] += z;
+
+        normals[(i*heightfieldHeight+j+1)*3+0] += x;
+        normals[(i*heightfieldHeight+j+1)*3+1] += y;
+        normals[(i*heightfieldHeight+j+1)*3+2] += z;
+
+        // Second triangle.
+        a = vec3(i, heightfield[i*heightfieldHeight+j+1], j+1);
+        b = vec3(i+1, heightfield[(i+1)*heightfieldHeight+j], j);
+        c = vec3(i+1, heightfield[(i+1)*heightfieldHeight+j+1], j+1);
+        v1 = b-a;
+        v2 = c-a;
+        normal = -QVector3D::crossProduct(v1, v2).normalized();
+        x = normal.x() * contrib, y = normal.y() * contrib, z = normal.z() * contrib;
+        normals[(i*heightfieldHeight+j+1)*3+0] += x;
+        normals[(i*heightfieldHeight+j+1)*3+1] += y;
+        normals[(i*heightfieldHeight+j+1)*3+2] += z;
+
+        normals[((i+1)*heightfieldHeight+j)*3+0] += x;
+        normals[((i+1)*heightfieldHeight+j)*3+1] += y;
+        normals[((i+1)*heightfieldHeight+j)*3+2] += z;
+
+        normals[((i+1)*heightfieldHeight+j+1)*3+0] += x;
+        normals[((i+1)*heightfieldHeight+j+1)*3+1] += y;
+        normals[((i+1)*heightfieldHeight+j+1)*3+2] += z;
+      }
+    }
+
+    GLfloat* vertices = new GLfloat[heightfieldWidth * heightfieldHeight * (3+3+2)];
+    GLfloat* ptr = vertices;
+    for (int i = 0; i < heightfieldWidth; ++i) {
+      for (int j = 0; j < heightfieldHeight; ++j) {
+        *ptr++ = i;
+        *ptr++ = heightfield[i*heightfieldHeight+j];
+        *ptr++ = j;
+
+        *ptr++ = normals[(i*heightfieldHeight+j)*3+0];
+        *ptr++ = normals[(i*heightfieldHeight+j)*3+1];
+        *ptr++ = normals[(i*heightfieldHeight+j)*3+2];
+
+        *ptr++ = float(i) / heightfieldWidth;
+        *ptr++ = float(j) / heightfieldHeight;
+      }
+    }
+
+    terrainVB = renderer->addVertexBuffer(reinterpret_cast<const char*>(vertices), sizeof(GLfloat)*(3+3+2)*heightfieldHeight*heightfieldWidth, GL_STATIC_DRAW);
+    delete [] vertices;
+
+    std::vector<int> indices;
+    indices.reserve((heightfieldWidth-1)*(heightfieldWidth-1)*6);
+    for (int i = 0; i < heightfieldWidth-1; ++i) {
+      for (int j = 0; j < heightfieldHeight-1; ++j) {
+        indices.push_back(i*heightfieldHeight+j);
+        indices.push_back((i+1)*heightfieldHeight+j);
+        indices.push_back(i*heightfieldHeight+j+1);
+
+        indices.push_back(i*heightfieldHeight+j+1);
+        indices.push_back((i+1)*heightfieldHeight+j);
+        indices.push_back((i+1)*heightfieldHeight+j+1);
+      }
+    }
+
+    terrainIB = renderer->addIndexBuffer(reinterpret_cast<const char*>(&indices[0]), indices.size()*sizeof(int), GL_STATIC_DRAW);
+
   } catch (load_exception& e) {
     std::cout << "Exception: " << e.what() << std::endl;
     this->parentWidget()->close();
@@ -519,33 +656,32 @@ void App::initializeGL() {
   cam = new FirstPersonCamera;
   checkErrors();
 
+  //configWin->addPointerValue("Rotation", &rotation, 0, 360);
+
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_MULTISAMPLE);
-
-  this->setupPhysics();
 
   std::cout << "Init complete!" << std::endl;
 }
 
 void App::setupPhysics() {
-  float connectionHeight = 1.2f;
-  float cubeHalfExtents = 1;
+  float connectionHeight = -1;
+  float cubeHalfExtents = 2.5;
   int rightIndex = 0;
-  int upIndex = 1;
-  int forwardIndex = 2;
-  btVector3 wheelDirection(0,-1,0);
-  btVector3 wheelAxle(-1,0,0);
+  int upIndex = 2;
+  int forwardIndex = 1;
+  btVector3 wheelDirection(0,0,-1);
+  btVector3 wheelAxle(1,0,0);
   btScalar suspensionRestLength(0.6);
-  float wheelRadius = 0.5f;
-  float wheelWidth = 0.4f;
+  float wheelRadius = 1.2;
+  float wheelWidth = 0.8;
   float wheelFriction = 1000;
   float suspensionStiffness = 20.f;
-  float suspensionDamping = 2.3f;
-  float suspensionCompression = 4.4f;
+  float suspensionDamping = 0.3f;
+  float suspensionCompression = 2.4f;
   float rollInfluence = 0.1f;
+  float vehicleMass = 500;
 
-  //groundShape = new btBoxShape(btVector3(50,3,50));
-  //m_collisionShapes.push_back(groundShape);
   collisionConfiguration = new btDefaultCollisionConfiguration();
   dispatcher = new btCollisionDispatcher(collisionConfiguration);
   btVector3 worldMin(-1000,-1000,-1000);
@@ -553,55 +689,99 @@ void App::setupPhysics() {
   overlappingPairCache = new btAxisSweep3(worldMin, worldMax);
   constraintSolver = new btSequentialImpulseConstraintSolver();
   dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, constraintSolver, collisionConfiguration);
+  dynamicsWorld->setGravity(btVector3(0,0,-10));
 
-  int heightfieldWidth = 100;
-  int heightfieldHeight = 100;
+  heightfieldWidth = 256;
+  heightfieldHeight = 256;
   heightfield = new float[heightfieldWidth * heightfieldHeight];
   memset(heightfield, 0, sizeof(float)*heightfieldWidth*heightfieldHeight);
+  // TODO: simplex noise
 
+  float min = 10;
+  float max = -10;
+  for (int i = 0; i < heightfieldWidth; ++i) {
+    for (int j = 0; j < heightfieldHeight; ++j) {
+      float height = -2.5 + sin(float(i*10) / heightfieldWidth)*cos(float(j*10) / heightfieldHeight) * 3;
+      heightfield[i*heightfieldHeight+j] = height;
+      if (height < min)
+        min = height;
+      if (height > max)
+        max = height;
+    }
+  }
+
+  /*yTrans = (max - min) / 2 - (3. / 2) + 1;
   groundShape = new btHeightfieldTerrainShape(heightfieldWidth, heightfieldHeight,
       heightfield,
       btScalar(1),
-      btScalar(0),
-      btScalar(0),
-      1,
+      btScalar(min),
+      btScalar(max),
+      upIndex,
       PHY_FLOAT,
       false);
-  btDefaultMotionState* terrainState = new btDefaultMotionState(btTransform(btQuaternion(btVector3(0,1,0), M_PI*0.5), btVector3(0,0,0)));
-  btRigidBody::btRigidBodyConstructionInfo terrainCI(0, terrainState, groundShape, btVector3(0,0,0));
-  groundBody = new btRigidBody(terrainCI);
-  dynamicsWorld->addRigidBody(groundBody);
 
-  btCollisionShape *chassisShape = new btBoxShape(btVector3(1.f,2.f, 0.5f));
+  btDefaultMotionState* groundState = new btDefaultMotionState;
+  btRigidBody::btRigidBodyConstructionInfo groundCI(0, groundState, groundShape, btVector3(0,0,0));
+  groundBody = new btRigidBody(groundCI);
+  dynamicsWorld->addRigidBody(groundBody);*/
+
+  btCollisionShape *chassisShape = new btBoxShape(btVector3(2., 4, 0.5f));
   btCompoundShape *compound = new btCompoundShape();
   btTransform localTrans;
   localTrans.setIdentity();
-  localTrans.setOrigin(btVector3(0,0,1));
+  localTrans.setOrigin(btVector3(0,1,0));
 
   compound->addChildShape(localTrans, chassisShape);
 
-  btDefaultMotionState* chassisState = new btDefaultMotionState();
-  btRigidBody::btRigidBodyConstructionInfo chassisCI(0, chassisState, compound, btVector3(0,0,0));
+  wheelShape = new btCylinderShapeX(btVector3(wheelWidth, wheelRadius, wheelRadius));
+
+  btTransform tr1;
+  tr1.setIdentity();
+  tr1.setOrigin(btVector3(cubeHalfExtents-(0.3*wheelWidth),2*cubeHalfExtents+wheelRadius, connectionHeight));
+  compound->addChildShape(tr1, wheelShape);
+
+  btTransform tr2;
+  tr2.setIdentity();
+  tr2.setOrigin(btVector3(-cubeHalfExtents+(0.3*wheelWidth),2*cubeHalfExtents+wheelRadius, connectionHeight));
+  compound->addChildShape(tr2, wheelShape);
+
+  btTransform tr3;
+  tr3.setIdentity();
+  tr3.setOrigin(btVector3(-cubeHalfExtents+(0.3*wheelWidth),-2*cubeHalfExtents+wheelRadius, connectionHeight));
+  compound->addChildShape(tr3, wheelShape);
+
+  btTransform tr4;
+  tr4.setIdentity();
+  tr4.setOrigin(btVector3(cubeHalfExtents-(0.3*wheelWidth),-2*cubeHalfExtents+wheelRadius, connectionHeight));
+  compound->addChildShape(tr4, wheelShape);
+
+  btVector3 localInertia(0,0,0);
+  btTransform startTransform;
+  startTransform.setIdentity();
+  startTransform.setOrigin(btVector3(0, 0, 5));
+  chassisShape->calculateLocalInertia(vehicleMass, localInertia);
+  btDefaultMotionState* chassisState = new btDefaultMotionState(startTransform);
+  btRigidBody::btRigidBodyConstructionInfo chassisCI(vehicleMass, chassisState, compound, localInertia);
   chassis = new btRigidBody(chassisCI);
   chassis->setActivationState(DISABLE_DEACTIVATION);
-
-  wheelShape = new btCylinderShapeX(btVector3(wheelWidth, wheelRadius, wheelRadius));
+  dynamicsWorld->addRigidBody(chassis);
 
   vehicleRaycaster = new btDefaultVehicleRaycaster(dynamicsWorld);
   vehicle = new btRaycastVehicle(tuning, chassis, vehicleRaycaster);
-
   dynamicsWorld->addVehicle(vehicle);
 
-  btVector3 connectionPoint(cubeHalfExtents-(0.3*wheelWidth),connectionHeight,2*cubeHalfExtents-wheelRadius);
+  vehicle->setCoordinateSystem(rightIndex,upIndex,forwardIndex);
+
+  btVector3 connectionPoint(cubeHalfExtents-(0.3*wheelWidth),2*cubeHalfExtents+wheelRadius, connectionHeight);
   vehicle->addWheel(connectionPoint, wheelDirection, wheelAxle, suspensionRestLength, wheelRadius, tuning, true);
 
-  connectionPoint = btVector3(-cubeHalfExtents+(0.3*wheelWidth),connectionHeight,2*cubeHalfExtents-wheelRadius);
+  connectionPoint = btVector3(-cubeHalfExtents+(0.3*wheelWidth),2*cubeHalfExtents+wheelRadius, connectionHeight);
   vehicle->addWheel(connectionPoint, wheelDirection, wheelAxle, suspensionRestLength, wheelRadius, tuning, true);
 
-  connectionPoint = btVector3(-cubeHalfExtents+(0.3*wheelWidth),connectionHeight,-2*cubeHalfExtents+wheelRadius);
+  connectionPoint = btVector3(-cubeHalfExtents+(0.3*wheelWidth),-2*cubeHalfExtents+wheelRadius, connectionHeight);
   vehicle->addWheel(connectionPoint, wheelDirection, wheelAxle, suspensionRestLength, wheelRadius, tuning, false);
 
-  connectionPoint = btVector3(cubeHalfExtents-(0.3*wheelWidth),connectionHeight,-2*cubeHalfExtents+wheelRadius);
+  connectionPoint = btVector3(cubeHalfExtents-(0.3*wheelWidth),-2*cubeHalfExtents+wheelRadius, connectionHeight);
   vehicle->addWheel(connectionPoint, wheelDirection, wheelAxle, suspensionRestLength, wheelRadius, tuning, false);
 
   for (int i = 0; i < vehicle->getNumWheels(); ++i) {
@@ -613,56 +793,119 @@ void App::setupPhysics() {
     wheel.m_rollInfluence = rollInfluence;
   }
 
-  engineForce = breakingForce = vehicleSteering = 0;
-
   debugDrawer = new GLDebugDrawer();
   dynamicsWorld->setDebugDrawer(debugDrawer);
+}
+
+BlenderScene::BlenderScene(const char* fileName, btDynamicsWorld* world, Renderer* renderer) {
+  if (!QFile::exists(fileName))
+    throw load_exception(QString("Scene file ") + fileName + " does not exist!");
+
+  this->world = world;
+  this->renderer = renderer;
+
+  QFileInfo info(fileName);
+  QString path = info.absolutePath() + QDir::separator();
+  QString bulletFile = path + info.baseName() + ".bullet";
+
+  if (QFile::exists(bulletFile)) {
+    importer = new btBulletWorldImporter(world);
+
+    if (!importer->loadFile(bulletFile.toStdString().c_str())) {
+      delete importer;
+      throw load_exception(QString("Failed to load blender scene ") + fileName);
+    }
+
+    std::cout << "Num collision shapes: " << importer->getNumCollisionShapes() << std::endl
+      << "Num rigid bodies: " << importer->getNumRigidBodies() << std::endl
+      << "Num constraints: " << importer->getNumConstraints() << std::endl
+      << "Num bvhs: " << importer->getNumBvhs() << std::endl
+      << "Num triangle info maps: " << importer->getNumTriangleInfoMaps() << std::endl;
+
+    std::cout << "Adding objects!" << std::endl;
+
+    QFile sceneFile(fileName);
+    if (!sceneFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+      delete importer;
+      throw load_exception(QString("Scene file could not be opened!"));
+    }
+
+    while (!sceneFile.atEnd()) {
+      QString line = QString(sceneFile.readLine()).trimmed();
+      QString name = line.split('.').at(0);
+      RenderableObject object;
+      if (QFile::exists(path + name + ".shader"))
+        object.shader = renderer->addShader((path + name + ".shader").toStdString().c_str());
+      if (QFile::exists(path + name + ".jpg"))
+        object.color = renderer->addTexture((path + name + ".jpg").toStdString().c_str());
+      if (QFile::exists(path + name + ".mesh"))
+        object.mesh = renderer->addMesh((path + name + ".mesh").toStdString().c_str());
+
+      object.body = importer->getRigidBodyByName(line.toStdString().c_str());
+      if (object.body != NULL && object.body->getMotionState() == NULL) {
+        btVector3 translation = object.body->getCenterOfMassPosition();
+        btQuaternion orientation = object.body->getOrientation();
+        btTransform transform(orientation, translation);
+        btDefaultMotionState* state = new btDefaultMotionState(transform);
+        object.body->setMotionState(state);
+      }
+      objects << object;
+    }
+  }
+  else
+    throw load_exception(QString("Physics file (.bullet) does not exist!"));
+
+  std::cout << "Added " << objects.size() << " objects to the world." << std::endl;
+}
+
+BlenderScene::~BlenderScene() {
+  delete importer;
+}
+
+void BlenderScene::draw(qint64 delta) {
+  for (int i = 0; i < objects.size(); ++i) {
+    RenderableObject object = objects.at(i);
+
+    if (object.shader != NULL)
+      renderer->setShader(object.shader);
+    if (object.color != NULL)
+      renderer->setTexture("color", object.color, 0);
+    if (object.mesh != NULL && object.body != NULL) {
+      btMotionState* state = object.body->getMotionState();
+      if (state != NULL) {
+        btTransform transform;
+        btScalar matrix[16];
+        state->getWorldTransform(transform);
+        transform.getOpenGLMatrix(matrix);
+        glPushMatrix();
+        glMultMatrixf(matrix);
+        renderer->drawMesh(object.mesh);
+        glPopMatrix();
+      }
+    }
+  }
 }
 
 void App::cleanUpPhysics() {
   if (heightfield)
     delete [] heightfield;
 
+  delete dynamicsWorld;
   // major TODO !!
 }
 
 void App::paintGL() {
   qint64 delta = timer->restart();
-  dynamicsWorld->stepSimulation(delta/3000.f, 10);
 
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(45., float(this->width()) / this->height(), 0.1, 1000.);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  cam->setTransform(delta / 100.);
-
-  renderer->disableShaders();
-  renderer->drawGrid(50, 10);
-
-  renderer->setShader(diffuse);
-
-  btScalar matrix[16];
-  vehicle->getChassisWorldTransform().getOpenGLMatrix(matrix);
-  glPushMatrix(); // TODO: modernize this!
-  glMultMatrixf(matrix);
-  renderer->drawMesh(truck);
-  glPopMatrix();
-
-  renderer->setShader(wheelShader);
-  renderer->setTexture("wheel", wheelTexture, 0);
-
-  if (accelerating) {
-    engineForce = 1000;
-    breakingForce = 0;
-  }
-
-  if (breaking) {
-    breakingForce = 100;
+  if (accelerating)
+    engineForce = 2000;
+  else
     engineForce = 0;
-  }
+
+  if (breaking)
+    breakingForce = 100;
+  else
+    breakingForce = 0;
 
   vehicle->applyEngineForce(engineForce, 2);
   vehicle->applyEngineForce(engineForce, 3);
@@ -670,14 +913,63 @@ void App::paintGL() {
   vehicle->setBrake(breakingForce, 3);
 
   if (steeringLeft)
-    vehicleSteering += 0.04;
+    vehicleSteering += 0.004 * delta;
 
   if (steeringRight)
-    vehicleSteering -= 0.04;
+    vehicleSteering -= 0.004 * delta;
 
-  // Front wheels
+  //vehicleSteering += (vehicleSteering > 0 ? -1:1) * 0.0001 * delta;
+  vehicleSteering = clamp(vehicleSteering, -maxSteering, maxSteering);
+
+  vehicleCamRotation += (vehicleSteering > vehicleCamRotation ? 1:-1) * 0.001 * delta;
+  vehicleCamRotation = clamp(vehicleCamRotation, -maxSteering, maxSteering);
+
   vehicle->setSteeringValue(vehicleSteering, 0);
   vehicle->setSteeringValue(vehicleSteering, 1);
+
+  dynamicsWorld->stepSimulation(delta/1000.f, 30);
+
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluPerspective(75., float(this->width()) / this->height(), 0.1, 1000.);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  if (vehicleCam) {
+    btVector3 forward = vehicle->getForwardVector();
+    btVector3 origin = vehicle->getChassisWorldTransform().getOrigin();
+    btVector3 pos = origin - 10*forward + btVector3(0,0,8);
+    /*mat4 transform;
+    transform.translate(origin.x(), origin.y(), origin.z());
+    transform.rotate(-vehicleCamRotation*40, 0,1,0);
+    transform.translate(-origin.x(), -origin.y(), -origin.z());
+    vec3 rotatedPosition = transform * vec3(pos.x(), pos.y(), pos.z());
+    btVector3 center = origin + btVector3(0,0,2);
+    gluLookAt(rotatedPosition.x(), rotatedPosition.y(), rotatedPosition.z(),
+        center.x(), center.y(), center.z(),
+        0,1,0);*/
+    btVector3 aboveVehicle = origin + btVector3(0,0,2);
+    gluLookAt(pos.x(), pos.y(), pos.z(),
+        aboveVehicle.x(), aboveVehicle.y(), aboveVehicle.z(),
+        0,0,1);
+  }
+  else
+    cam->setTransform(delta / 100.);
+
+  renderer->setShader(diffuse);
+
+  btScalar matrix[16];
+  vehicle->getChassisWorldTransform().getOpenGLMatrix(matrix);
+  glPushMatrix(); // TODO: modernize this!
+  glMultMatrixf(matrix);
+  glRotatef(90, 1,0,0);
+  glRotatef(180, 0,1,0);
+  renderer->drawMesh(truck);
+  glPopMatrix();
+
+  renderer->setShader(wheelShader);
+  renderer->setTexture("wheel", wheelTexture, 0);
 
   for (int i = 0; i < vehicle->getNumWheels(); ++i) {
     vehicle->updateWheelTransform(i, true);
@@ -688,8 +980,94 @@ void App::paintGL() {
     glPopMatrix();
   }
 
+  /*renderer->setShader(terrainShader);
+  renderer->setTexture("grass", grass, 0);
+  renderer->setVertexBuffer(terrainVB);
+  renderer->setIndexBuffer(terrainIB);
+  int vertexSize = 8*4;
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vertexSize, BUFFER_OFFSET(0));
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, vertexSize, BUFFER_OFFSET(3*4));
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, vertexSize, BUFFER_OFFSET(6*4));
+  glEnableVertexAttribArray(2);
+
+  glPushMatrix();
+  glScalef(-1,1,1);
+  glRotatef(270, 0,1,0);
+  glTranslatef(-heightfieldWidth/2.f+0.5, yTrans, -heightfieldHeight/2.f+0.5);
+  glDrawElements(GL_TRIANGLES, (heightfieldWidth-1)*(heightfieldHeight-1)*6, GL_UNSIGNED_INT, 0);
+  glPopMatrix();
+
+  btTransform transform;
+  barrelBody->getMotionState()->getWorldTransform(transform);
+  transform.getOpenGLMatrix(matrix);
+  glPushMatrix();
+  glMultMatrixf(matrix);
+  renderer->setShader(wheelShader);
+  renderer->setTexture("wheel", barrelTexture, 0);
+  renderer->drawMesh(barrel);
+  glPopMatrix();*/
+
+  scene->draw(delta);
+
+  renderer->setShader(scattering);
+
+  const float PI = M_PI;
+	const float kr = 0.0025f;		// Rayleigh scattering constant
+	const float kr_4pi = kr*4.0f*PI;
+	const float km = 0.0010f;		// Mie scattering constant
+	const float km_4pi = km*4.0f*PI;
+	const float e_sun = 20.0f;		// Sun brightness constant
+	const float g = -0.990f;		// The Mie phase asymmetry factor
+	//const float exposure = 2.0f;
+
+	const float inner_radius = 200;
+	const float outer_radius = inner_radius*1.025;
+
+  vec3 wave_length = vec3(0.650, 0.570, 0.475);
+  wave_length *= wave_length * wave_length * wave_length;
+  vec3 inv_wave_length = vec3(1 / wave_length.x(), 1 / wave_length.y(), 1 / wave_length.z());
+
+	const float rayleigh_scale_depth = 0.25f;
+	//const float mie_scale_depth = 0.1f;
+
+  vec3 lightDir = vec3(0, 1000, 0).normalized();
+  vec3 cam_pos = cam->getPosition();
+  //std::cout << cam_pos.x() << " " << cam_pos.y() << " " << cam_pos.z() << std::endl;
+
+  renderer->setUniform("cam_pos", cam_pos);
+  renderer->setUniform("light_dir", lightDir);
+	renderer->setUniform("inv_wave_length", inv_wave_length);
+	renderer->setUniform("cam_height", (cam_pos + vec3(0,inner_radius,0)).length());
+	renderer->setUniform("inner_radius", inner_radius);
+	renderer->setUniform("inner_radius_2", inner_radius*inner_radius);
+	renderer->setUniform("outer_radius", outer_radius);
+	renderer->setUniform("outer_radius_2", outer_radius*outer_radius);
+	renderer->setUniform("kr_e_sun", kr*e_sun);
+	renderer->setUniform("km_e_sun", km*e_sun);
+	renderer->setUniform("kr_4pi", kr_4pi);
+	renderer->setUniform("km_4pi", km_4pi);
+	renderer->setUniform("scale", 1.0f / (outer_radius - inner_radius));
+	renderer->setUniform("scale_depth", rayleigh_scale_depth);
+	renderer->setUniform("scale_over_scale_depth", (1.0f / (outer_radius - inner_radius)) / rayleigh_scale_depth);
+	renderer->setUniform("g", g);
+	renderer->setUniform("g_2", g*g);
+
+  glPushMatrix();
+
+  glTranslatef(0,-inner_radius, 0);
+
+  /*GLUquadric* pSphere = gluNewQuadric();
+	gluSphere(pSphere, outer_radius, 100, 50);
+	gluDeleteQuadric(pSphere);*/
+  /*glScalef(1,1,1);
+  renderer->drawMesh(skyDome);*/
+  glPopMatrix();
+
   renderer->disableShaders();
 
+  //glDisable(GL_DEPTH_TEST);
   if (drawDebugInfo) {
     dynamicsWorld->getDebugDrawer()->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
     dynamicsWorld->debugDrawWorld();
@@ -702,17 +1080,18 @@ void App::paintGL() {
   glLoadIdentity();
 
   this->renderText(1,0,0, "FPS: 943"); // TODO: doesn't work anymore!
+  //glEnable(GL_DEPTH_TEST);
 
   this->update();
 }
 
 void App::resizeGL(int width, int height) {
-  glViewport(0, 0, width, height);
+  /*glViewport(0, 0, width, height);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   gluPerspective(45., float(width)/height, 0.1, 1000.);
   glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
+  glLoadIdentity();*/
 }
 
 void App::keyPressEvent(QKeyEvent* event) {
@@ -723,25 +1102,34 @@ void App::keyPressEvent(QKeyEvent* event) {
     case Qt::Key_Space:
       this->releaseKeyboard();
       this->setCursor(Qt::ArrowCursor);
-      state = false;
+      mouseFree = false;
       break;
     case Qt::Key_B:
       drawDebugInfo = !drawDebugInfo;
       break;
     case Qt::Key_Up:
       accelerating = true;
-      breaking = false;
       break;
     case Qt::Key_Down:
-      accelerating = false;
       breaking = true;
+      break;
     case Qt::Key_Left:
       steeringLeft = true;
-      steeringRight = false;
       break;
     case Qt::Key_Right:
       steeringRight = true;
-      steeringLeft = false;
+      break;
+    case Qt::Key_V:
+      vehicleCam = !vehicleCam;
+      break;
+
+    case Qt::Key_R:
+      btTransform transform;
+      transform.setIdentity();
+      transform.setOrigin(btVector3(0,10,5));
+      chassis->setCenterOfMassTransform(transform);
+      chassis->setLinearVelocity(btVector3(0,0,0));
+      chassis->setAngularVelocity(btVector3(0,0,0));
       break;
   }
 
@@ -752,25 +1140,22 @@ void App::keyReleaseEvent(QKeyEvent* event) {
   switch (event->key()) {
     case Qt::Key_Up:
       accelerating = false;
-      breaking = true;
       break;
     case Qt::Key_Down:
-      accelerating = true;
       breaking = false;
+      break;
     case Qt::Key_Left:
       steeringLeft = false;
-      steeringRight = true;
       break;
     case Qt::Key_Right:
       steeringRight = false;
-      steeringLeft = true;
       break;
   }
   cam->processKeyRelease(event->key());
 }
 
 void App::mouseMoveEvent(QMouseEvent* event) {
-  if (state) {
+  if (mouseFree) {
     int x = this->pos().x()+this->width()/2;
     int y = this->pos().y()+this->height()/2;
 
@@ -785,27 +1170,50 @@ void App::mouseMoveEvent(QMouseEvent* event) {
 
 void App::mousePressEvent(QMouseEvent* event) {
   if (event->button() == Qt::LeftButton) {
-    state = true;
+    mouseFree = true;
     this->grabKeyboard();
     this->setCursor(Qt::BlankCursor);
   }
 }
 
-ConfigurationWindow::ConfigurationWindow() : QWidget(0, Qt::Window) {
-  /*QGridLayout* mainLayout = new QGridLayout;
-  mainLayout->setSpacing(0);
-  mainLayout->setContentsMargins(0,0,0,0);
+PointerSlider::PointerSlider(float* var, float min, float max) : QSlider(Qt::Horizontal) {
+  this->var = var;
+  this->min = min;
+  this->max = max;
+  this->setMinimum(0);
+  this->setMaximum((int)((max-min)*100));
 
-  setLayout(mainLayout);*/
+  connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateVar(int)));
+}
+
+void PointerSlider::updateVar(int value) {
+  *(this->var) = value / 100.f + min;
+}
+
+ConfigurationWindow::ConfigurationWindow() : QWidget(0, Qt::Window) {
+  mainLayout = new QGridLayout;
+  setLayout(mainLayout);
+}
+
+ConfigurationWindow::~ConfigurationWindow() {
+  delete mainLayout;
+}
+
+void ConfigurationWindow::addPointerValue(const char* name, float* var, float min, float max) {
+  PointerSlider* slider = new PointerSlider(var, min, max);
+  QLabel* label = new QLabel(name);
+  mainLayout->addWidget(label, 0,0, Qt::AlignTop|Qt::AlignLeft);
+  mainLayout->addWidget(slider, 0,1);
 }
 
 int main(int argc, char** args) {
   QApplication qapp(argc, args);
   QGLFormat format;
   format.setSampleBuffers(true);
-  App app(format);
-  app.resize(800, 800);
   ConfigurationWindow win;
+  win.resize(600, 200);
+  App app(format, &win);
+  app.resize(800, 800);
   win.show();
   app.show();
   return qapp.exec();

@@ -40,7 +40,7 @@ public:
   }
 
   void processMouseMotion(int dx, int dy) {
-    yaw += dx/100.0;
+    yaw -= dx/100.0;
     pitch -= dy/100.0;
     if (pitch < -M_PI/2)
       pitch = -M_PI/2;
@@ -56,15 +56,16 @@ public:
     if (movingBackward)
       position -= direction * factor;
     if (movingLeft)
-      position -= QVector3D::crossProduct(direction, vec3(0,1,0)).normalized() * factor;
-    if (movingRight)
       position += QVector3D::crossProduct(direction, vec3(0,1,0)).normalized() * factor;
+    if (movingRight)
+      position -= QVector3D::crossProduct(direction, vec3(0,1,0)).normalized() * factor;
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(position.x(), position.y(), position.z(),
-              position.x()+direction.x(), position.y()+direction.y(), position.z()+direction.z(),
-              0,1,0);
+
+    gluLookAt(position.x(), position.z(), position.y(),
+              position.x()+direction.x(), position.z()+direction.z(), position.y()+direction.y(),
+              0,0,1);
   }
 
   vec3 getPosition() {
