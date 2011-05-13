@@ -20,15 +20,19 @@ class VertexBuffer;
 class IndexBuffer;
 class Shader;
 class Texture;
-
 class ConfigurationWindow;
+
+typedef QVector2D vec2;
+typedef QVector3D vec3;
+typedef QVector4D vec4;
+typedef QMatrix4x4 mat4;
 
 class BlenderScene {
 public:
   BlenderScene(const char* fileName, btDynamicsWorld* world, Renderer* renderer);
   ~BlenderScene();
 
-  void draw(qint64 delta);
+  void draw(qint64 delta, const mat4& proj, const mat4& modelView);
 
 private:
   btBulletWorldImporter* importer;
@@ -38,17 +42,22 @@ private:
   struct RenderableObject {
     RenderableObject() {
       mesh = NULL; // TODO: nulptr?
-      color = NULL;
-      normal = NULL;
+      texture0 = NULL;
+      texture1 = NULL;
+      texture2 = NULL;
+      texture3 = NULL;
       shader = NULL;
       body = NULL;
     }
 
     Mesh* mesh;
-    Texture* color;
-    Texture* normal;
+    Texture* texture0;
+    Texture* texture1;
+    Texture* texture2;
+    Texture* texture3;
     Shader* shader;
     btRigidBody* body;
+    QString name;
   };
 
   QList<RenderableObject> objects;
@@ -80,7 +89,7 @@ private:
   Mesh* skyDome;
   Texture* wheelTexture;
   Shader* diffuse;
-  Shader* wheelShader;
+  Shader* diffuseTextured;
   Shader* scattering;
   Shader* terrainShader;
   VertexBuffer* terrainVB;
@@ -88,6 +97,15 @@ private:
   Texture* grass;
   GLuint heightfieldId;
   float vehicleCamRotation;
+
+  GLuint fbo;
+  GLuint depthBuffer;
+  GLuint depthTexture;
+  GLuint colorBuffer;
+
+  int rttWidth, rttHeight;
+  Shader* blur;
+  mat4 previousModelView;
 
   BlenderScene* scene;
 

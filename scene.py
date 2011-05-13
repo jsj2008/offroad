@@ -1,7 +1,7 @@
 bl_addon_info = {
 "name": "SCENE Export",
 "author": "Matej Drame",
-"version": (0, 1),
+"version": (0, 2),
 "blender": (2, 5, 7),
 "api": 35266,
 "location": "File > Export",
@@ -15,12 +15,75 @@ import bpy
 from bpy.props import *
 from struct import pack
 from io import BytesIO
+from io_utils import ExportHelper
+import os
 
-class SceneExporter(bpy.types.Operator):
+def export_mesh(obj, scene_path, mesh_name):
+  """
+  // Format:
+  // format version (1 byte)
+  // nVertices (4 bytes)
+  // nIndices (4 bytes)
+  // vertexSize (1 byte)
+  // indexSize (1 byte)
+  // vertexBuffer (nVertices * vertexSize)
+  // indexBuffer (nIndices * indexSize)
+  """
+  #bpy.ops.object.mode_set(mode='EDIT')
+  #bpy.ops.mesh.select_all(action='SELECT')
+  #bpy.ops.mesh.quads_convert_to_tris() # TODO: copy mesh before
+  #bpy.ops.object.mode_set(mode='OBJECT')
+  # TODO: triangulate if necessary
+
+  mesh = obj.data
+  vertices = []
+  n_uvs = len(mesh.uv_textures)
+  for face_index, face in enumerate(mesh.faces):
+    vertex = [mesh.vertices[face.vertices[0]].co, mesh.vertices[face.vertices[0]].normal]
+    for u in range(n_uvs):
+      uv_data = mesh.uv_textures[u].data
+      coords = uv_data[face_index]
+      vertex.append(coords.uv1)
+    vertices.append(vertex)
+
+    vertex = [mesh.vertices[face.vertices[1]].co, mesh.vertices[face.vertices[1]].normal]
+    for u in range(n_uvs):
+      uv_data = mesh.uv_textures[u].data
+      coords = uv_data[face_index]
+      vertex.append(coords.uv2)
+    vertices.append(vertex)
+
+    vertex = [mesh.vertices[face.vertices[2]].co, mesh.vertices[face.vertices[2]].normal]
+    for u in range(n_uvs):
+      uv_data = mesh.uv_textures[u].data
+      coords = uv_data[face_index]
+      vertex.append(coords.uv3)
+    vertices.append(vertex)
+
+  filepath = os.path.join(os.path.dirname(scene_path), mesh_name)
+  with open(filepath, 'wb') as f:
+    f.write(pack('<I', 2))
+    f.write(pack('<I', len(vertices)))
+    f.write(pack('<I', len(vertices)))
+    f.write(pack('<I', len(vertices[0])))
+    f.write(pack('<I', 4))
+
+    for v in vertices:
+      f.write(pack('<fff', *v[0]))
+      f.write(pack('<fff', *v[1]))
+      for uv in v[2:]:
+        f.write(pack('<ff', *uv))
+
+    for index in range(len(vertices)):
+      f.write(pack('<I', index))
+
+class SceneExporter(bpy.types.Operator, ExportHelper):
   '''Exports to SCENE'''
   bl_idname = 'export.scene'
   bl_label = 'Export SCENE'
   bl_options = {'REGISTER', 'UNDO'}
+
+  filename_ext = '.scene'
 
   filepath = StringProperty(name="File Path",
     description="Filepath used for exporting the SCENE file.",
@@ -31,12 +94,38 @@ class SceneExporter(bpy.types.Operator):
     default=True, options={'HIDDEN'})
 
   def execute(self, context):
-    """Exports all selected objects into scene. Lines containing names of objects in the scene.
+    """Exports all visible objects (meshes) into .scene. Also exports meshes into separate files.
+      Object with the same base name (before dot) are consider to be instances of the same mesh -
+      those meshes are exported only once.
+      Object must have materials applied (one material max, but unlimited uvs/textures).
     """
     objects = [object for object in bpy.context.visible_objects if object.type == 'MESH']
     with open(self.filepath, 'w') as f:
-      for object in objects:
-        f.write(object.name + '\n')
+      f.write('<scene>\n') # TODO: does Python 3 have no built-in simple XML writers?!!
+      exported_meshes = []
+      for obj in objects:
+        x,y,z = obj.location
+        if obj.active_material == None:
+          print(obj.name + ' does not have a material assigned!')
+          continue
+        slots = obj.active_material.texture_slots
+        n_slots = len(list(filter(lambda s: s != None, slots)))
+        shader = "color.shader" if n_slots == 1 else "color-ambient.shader" # TODO: more
+        mesh = obj.name.split('.')[0] + '.mesh'
+
+        f.write('<object ')
+        f.write('name="%s" shader="%s" mesh="%s"' % (obj.name, shader, mesh))
+        for i in range(n_slots):
+          f.write(' texture%d="%s"' % (i, os.path.basename(slots[i].texture.image.filepath)))
+        f.write('>\n')
+        f.write('  <location x="%f" y="%f" z="%f" />\n' % (x,y,z))
+        f.write('</object>\n')
+        # export appropriate mesh
+        if mesh not in exported_meshes:
+          print('Exporting ' + mesh)
+          export_mesh(obj, self.filepath, mesh)
+          exported_meshes.append(mesh)
+      f.write('</scene>\n')
     return {'FINISHED'}
 
   def invoke(self, context, event):
@@ -47,7 +136,7 @@ class SceneExporter(bpy.types.Operator):
 def menu_export(self, context):
   import os
   default_path = os.path.splitext(bpy.data.filepath)[0] + ".scene"
-  self.layout.operator(SceneExporter.bl_idname, text="SCENE (.scene)")#.filepath = default_path
+  self.layout.operator(SceneExporter.bl_idname, text="SCENE (.scene)").filepath = default_path
 
 def register():
   bpy.utils.register_module(__name__)

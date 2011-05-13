@@ -12,11 +12,6 @@
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
-typedef QVector2D vec2;
-typedef QVector3D vec3;
-typedef QVector4D vec4;
-typedef QMatrix4x4 mat4;
-
 #include <FirstPersonCamera.h>
 
 class load_exception : public std::runtime_error {
@@ -44,6 +39,12 @@ void checkErrors() {
     case GL_TABLE_TOO_LARGE:   cout << "OpenGL error: table too large" << endl; break;
     default:                   cout << "OpenGL error: unknown" << endl; break;
   }
+}
+
+mat4 toMat4(const btScalar* columnMajor) {
+  qreal mat[16];
+  for (int i = 0; i < 16; ++i) mat[i] = columnMajor[i];
+  return mat4(mat).transposed();
 }
 
 class VertexBuffer {
@@ -231,6 +232,7 @@ public:
     shader->pixelShader = pixelShader;
     this->shaders << shader;
 
+    std::cout << "Loaded shader " << fullPath.toStdString() << std::endl;
     loadedShaders[fullPath] = shader;
     return shader;
   }
@@ -321,24 +323,40 @@ public:
     currentProgram = 0;
   }
 
-  void setUniform(const char* name, double value) {
+  void setUniform1i(const char* name, int value) {
+    glUniform1i(glGetUniformLocation(currentProgram, name), value);
+  }
+
+  void setUniform1d(const char* name, double value) {
     glUniform1f(glGetUniformLocation(currentProgram, name), value);
   }
 
-  void setUniform(const char* name, float value) {
+  void setUniform1f(const char* name, float value) {
     glUniform1f(glGetUniformLocation(currentProgram, name), value);
   }
 
-  void setUniform(const char* name, const vec2& value) {
+  void setUniform2f(const char* name, const vec2& value) {
     glUniform2f(glGetUniformLocation(currentProgram, name), value.x(), value.y());
   }
 
-  void setUniform(const char* name, const vec3& value) {
+  void setUniform3f(const char* name, const vec3& value) {
     glUniform3f(glGetUniformLocation(currentProgram, name), value.x(), value.y(), value.z());
   }
 
-  void setUniform(const char* name, const vec4& value) {
+  void setUniform4f(const char* name, const vec4& value) {
     glUniform4f(glGetUniformLocation(currentProgram, name), value.x(), value.y(), value.z(), value.w());
+  }
+
+  void setUniformMat4(const char* name, const mat4& value) {
+    GLfloat mat[4*4]; // TODO: this assumes sizeof qreal == sizeof double
+    const qreal* data = value.constData();
+    for (int i = 0; i < 16; ++i)
+      mat[i] = data[i];
+    glUniformMatrix4fv(glGetUniformLocation(currentProgram, name), 1, GL_FALSE, mat);
+  }
+
+  void setUniform4fv(const char* name, float* value) {
+    glUniformMatrix4fv(glGetUniformLocation(currentProgram, name), 1, GL_FALSE, value);
   }
 
   void drawGrid(uint numOfLines, float halfSize) {
@@ -385,7 +403,7 @@ public:
     file.read(reinterpret_cast<char*>(&vertexSize), 4);
     file.read(reinterpret_cast<char*>(&indexSize), 4);
 
-    if (version != 1)
+    if (version < 1)
       throw load_exception(QString("Unknown mesh version!"));
 
     std::vector<char> data;
@@ -421,11 +439,14 @@ public:
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, vertexSize, BUFFER_OFFSET(3*4));
     glEnableVertexAttribArray(1);
-    if (vertexSize == 32) // includes uvs
+    if (vertexSize >= 32) {
       glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, vertexSize, BUFFER_OFFSET(6*4));
-
-    if (vertexSize == 32)
       glEnableVertexAttribArray(2);
+    }
+    if (vertexSize == 40) {
+      glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, vertexSize, BUFFER_OFFSET(8*4));
+      glEnableVertexAttribArray(3);
+    }
 
     glBindVertexArray(0);
 
@@ -441,7 +462,7 @@ public:
     meshes << mesh;
 
     loadedMeshes[fullPath] = mesh;
-    std::cout << "Mesh " << fileName << " loaded." << std::endl;
+    std::cout << "Loaded mesh " << fileName <<  std::endl;
     return mesh;
   }
 
@@ -461,14 +482,17 @@ public:
 
 private:
   bool checkSuccess(GLenum shader) {
-    char* log = new char[1000];
-    glGetShaderInfoLog(shader, 1000, NULL, log);
-    QString info(log);
-    std::cout << info.trimmed().toUtf8().constData() << std::endl;
-    delete [] log;
-
     GLint compiled;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+
+    if (!compiled) {
+      char* log = new char[1000];
+      glGetShaderInfoLog(shader, 1000, NULL, log);
+      QString info(log);
+      std::cout << info.trimmed().toUtf8().constData() << std::endl;
+      delete [] log;
+    }
+
     return compiled;
   }
 
@@ -500,6 +524,9 @@ App::App(const QGLFormat& format, ConfigurationWindow* configWin) : QGLWidget(fo
 
 App::~App() {
   this->cleanUpPhysics();
+
+  glDeleteFramebuffersEXT(1, &fbo);
+  glDeleteRenderbuffersEXT(1, &depthBuffer);
 
   if (scene)
     delete scene;
@@ -544,6 +571,13 @@ void App::initializeGL() {
   glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, &value);
   std::cout << "Max vertex uniforms: " << value << std::endl;
 
+  GLint maxbuffers;
+  glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxbuffers);
+  std::cout << "Max color attachments: " << maxbuffers << std::endl;
+
+  glGetIntegerv(GL_MAX_DRAW_BUFFERS, &maxbuffers);
+  std::cout << "Max draw buffers: " << maxbuffers << std::endl;
+
   std::cout << "sizeof(GLfloat) = " << sizeof(GLfloat) << std::endl;
 
   renderer = new Renderer();
@@ -552,16 +586,17 @@ void App::initializeGL() {
     wheel = renderer->addMesh("content/wheel.mesh");
     truck = renderer->addMesh("content/truck.mesh");
     diffuse = renderer->addShader("content/diffuse.shader");
-    wheelShader = renderer->addShader("content/wheel.shader");
+    diffuseTextured = renderer->addShader("content/diffuse-textured.shader");
     wheelTexture = renderer->addTexture("content/truck-tex.jpg");
     skyDome = renderer->addMesh("content/sky-dome.mesh");
     scattering = renderer->addShader("content/scattering.shader");
     terrainShader = renderer->addShader("content/terrain.shader");
     grass = renderer->addTexture("content/grass.jpg");
+    blur = renderer->addShader("content/blur.shader");
 
     this->setupPhysics();
 
-    scene = new BlenderScene("content/random.scene", dynamicsWorld, renderer);
+    scene = new BlenderScene("content/level1/level1.scene", dynamicsWorld, renderer);
 
     // TODO: cleanup this mess
     float contrib = 1.f / 6;
@@ -661,6 +696,49 @@ void App::initializeGL() {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_MULTISAMPLE);
 
+  rttWidth = 2048;
+  rttHeight = 2048;
+
+  glGenFramebuffers(1, &fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+  glGenRenderbuffers(1, &depthBuffer);
+  glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, rttWidth, rttHeight);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer);
+
+  glGenTextures(1, &colorBuffer);
+  glBindTexture(GL_TEXTURE_2D, colorBuffer);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, rttWidth, rttHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  //glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorBuffer, 0);
+
+  glGenTextures(1, &depthTexture);
+  glBindTexture(GL_TEXTURE_2D, depthTexture);
+/*  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  //glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, rttWidth, rttHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  // TODO: this is just wrong
+  glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depthTexture, 0);*/
+
+  GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+
+  if (GL_FRAMEBUFFER_COMPLETE != status) {
+    std::cout << "There was an error completing the FBO setup!" << std::endl;
+    this->parentWidget()->close();
+    return;
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
   std::cout << "Init complete!" << std::endl;
 }
 
@@ -672,13 +750,13 @@ void App::setupPhysics() {
   int forwardIndex = 1;
   btVector3 wheelDirection(0,0,-1);
   btVector3 wheelAxle(1,0,0);
-  btScalar suspensionRestLength(0.6);
-  float wheelRadius = 1.2;
-  float wheelWidth = 0.8;
-  float wheelFriction = 1000;
+  btScalar suspensionRestLength(0.9);
+  float wheelRadius = 1.5;
+  float wheelWidth = 1;
+  float wheelFriction = 2000;
   float suspensionStiffness = 20.f;
-  float suspensionDamping = 0.3f;
-  float suspensionCompression = 2.4f;
+  float suspensionDamping = 0.6f;
+  float suspensionCompression = 1.5;
   float rollInfluence = 0.1f;
   float vehicleMass = 500;
 
@@ -758,7 +836,7 @@ void App::setupPhysics() {
   btVector3 localInertia(0,0,0);
   btTransform startTransform;
   startTransform.setIdentity();
-  startTransform.setOrigin(btVector3(0, 0, 5));
+  startTransform.setOrigin(btVector3(0, 10, 5));
   chassisShape->calculateLocalInertia(vehicleMass, localInertia);
   btDefaultMotionState* chassisState = new btDefaultMotionState(startTransform);
   btRigidBody::btRigidBodyConstructionInfo chassisCI(vehicleMass, chassisState, compound, localInertia);
@@ -803,45 +881,78 @@ BlenderScene::BlenderScene(const char* fileName, btDynamicsWorld* world, Rendere
 
   this->world = world;
   this->renderer = renderer;
+  importer = NULL;
 
   QFileInfo info(fileName);
   QString path = info.absolutePath() + QDir::separator();
   QString bulletFile = path + info.baseName() + ".bullet";
 
+  bool physicsDataPresent = false;
+
   if (QFile::exists(bulletFile)) {
     importer = new btBulletWorldImporter(world);
 
     if (!importer->loadFile(bulletFile.toStdString().c_str())) {
-      delete importer;
-      throw load_exception(QString("Failed to load blender scene ") + fileName);
+      std::cout << "Could not load physics data from " << bulletFile.toStdString() << "!" << std::endl;
     }
-
-    std::cout << "Num collision shapes: " << importer->getNumCollisionShapes() << std::endl
-      << "Num rigid bodies: " << importer->getNumRigidBodies() << std::endl
-      << "Num constraints: " << importer->getNumConstraints() << std::endl
-      << "Num bvhs: " << importer->getNumBvhs() << std::endl
-      << "Num triangle info maps: " << importer->getNumTriangleInfoMaps() << std::endl;
-
-    std::cout << "Adding objects!" << std::endl;
-
-    QFile sceneFile(fileName);
-    if (!sceneFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-      delete importer;
-      throw load_exception(QString("Scene file could not be opened!"));
+    else {
+      physicsDataPresent = true;
+      std::cout << "Num collision shapes: " << importer->getNumCollisionShapes() << std::endl
+        << "Num rigid bodies: " << importer->getNumRigidBodies() << std::endl
+        << "Num constraints: " << importer->getNumConstraints() << std::endl
+        << "Num bvhs: " << importer->getNumBvhs() << std::endl
+        << "Num triangle info maps: " << importer->getNumTriangleInfoMaps() << std::endl;
     }
+  }
+  else
+    std::cout << "Could not load physics data from " << bulletFile.toStdString() << "!" << std::endl;
 
-    while (!sceneFile.atEnd()) {
-      QString line = QString(sceneFile.readLine()).trimmed();
-      QString name = line.split('.').at(0);
-      RenderableObject object;
-      if (QFile::exists(path + name + ".shader"))
-        object.shader = renderer->addShader((path + name + ".shader").toStdString().c_str());
-      if (QFile::exists(path + name + ".jpg"))
-        object.color = renderer->addTexture((path + name + ".jpg").toStdString().c_str());
-      if (QFile::exists(path + name + ".mesh"))
-        object.mesh = renderer->addMesh((path + name + ".mesh").toStdString().c_str());
+  QDomDocument doc;
+  QFile file(fileName);
 
-      object.body = importer->getRigidBodyByName(line.toStdString().c_str());
+  if (!file.open(QIODevice::ReadOnly)) {
+    QString error = "Error opening file ";
+    error += fileName;
+    throw load_exception(error.toStdString());
+  }
+
+  QString msg;
+  if (!doc.setContent(&file, false, &msg)) {
+    file.close();
+    QString error = "Error loading file ";
+    error += fileName;
+    error += " [";
+    error += msg + "]";
+    throw load_exception(error.toStdString());
+  }
+
+  file.close();
+
+  QDomNodeList nodes = doc.elementsByTagName("object");
+
+  for (unsigned int i = 0; i < nodes.length(); ++i) {
+    QDomElement e = nodes.at(i).toElement();
+    RenderableObject object;
+    if (e.hasAttribute("name"))
+      object.name = e.attribute("name");
+
+    if (e.hasAttribute("texture0"))
+      object.texture0 = renderer->addTexture((path+e.attribute("texture0")).toStdString().c_str());
+    if (e.hasAttribute("texture1"))
+      object.texture1 = renderer->addTexture((path+e.attribute("texture1")).toStdString().c_str());
+    if (e.hasAttribute("texture2"))
+      object.texture2 = renderer->addTexture((path+e.attribute("texture2")).toStdString().c_str());
+    if (e.hasAttribute("texture3"))
+      object.texture3 = renderer->addTexture((path+e.attribute("texture3")).toStdString().c_str());
+
+    if (e.hasAttribute("mesh"))
+      object.mesh = renderer->addMesh((path+e.attribute("mesh")).toStdString().c_str());
+
+    if (e.hasAttribute("shader"))
+      object.shader = renderer->addShader((path+e.attribute("shader")).toStdString().c_str());
+
+    if (physicsDataPresent) {
+      object.body = importer->getRigidBodyByName(object.name.toStdString().c_str());
       if (object.body != NULL && object.body->getMotionState() == NULL) {
         btVector3 translation = object.body->getCenterOfMassPosition();
         btQuaternion orientation = object.body->getOrientation();
@@ -849,11 +960,9 @@ BlenderScene::BlenderScene(const char* fileName, btDynamicsWorld* world, Rendere
         btDefaultMotionState* state = new btDefaultMotionState(transform);
         object.body->setMotionState(state);
       }
-      objects << object;
     }
+    objects << object;
   }
-  else
-    throw load_exception(QString("Physics file (.bullet) does not exist!"));
 
   std::cout << "Added " << objects.size() << " objects to the world." << std::endl;
 }
@@ -862,14 +971,25 @@ BlenderScene::~BlenderScene() {
   delete importer;
 }
 
-void BlenderScene::draw(qint64 delta) {
+void BlenderScene::draw(qint64 delta, const mat4& proj, const mat4& modelView) {
   for (int i = 0; i < objects.size(); ++i) {
     RenderableObject object = objects.at(i);
 
+    // TODO: sort objects by shader
+    // TODO: put objects into some kind of space tree
+
     if (object.shader != NULL)
       renderer->setShader(object.shader);
-    if (object.color != NULL)
-      renderer->setTexture("color", object.color, 0);
+
+    if (object.texture0 != NULL)
+      renderer->setTexture("texture0", object.texture0, 0);
+    if (object.texture1 != NULL)
+      renderer->setTexture("texture1", object.texture1, 1);
+    if (object.texture2 != NULL)
+      renderer->setTexture("texture2", object.texture2, 2);
+    if (object.texture3 != NULL)
+      renderer->setTexture("texture3", object.texture3, 3);
+
     if (object.mesh != NULL && object.body != NULL) {
       btMotionState* state = object.body->getMotionState();
       if (state != NULL) {
@@ -877,10 +997,11 @@ void BlenderScene::draw(qint64 delta) {
         btScalar matrix[16];
         state->getWorldTransform(transform);
         transform.getOpenGLMatrix(matrix);
-        glPushMatrix();
-        glMultMatrixf(matrix);
+        mat4 modelViewTop = modelView;
+        modelViewTop *= toMat4(matrix);
+        renderer->setUniformMat4("proj", proj);
+        renderer->setUniformMat4("modelView", modelViewTop);
         renderer->drawMesh(object.mesh);
-        glPopMatrix();
       }
     }
   }
@@ -927,15 +1048,18 @@ void App::paintGL() {
   vehicle->setSteeringValue(vehicleSteering, 0);
   vehicle->setSteeringValue(vehicleSteering, 1);
 
-  dynamicsWorld->stepSimulation(delta/1000.f, 30);
-
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(75., float(this->width()) / this->height(), 0.1, 1000.);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
+  dynamicsWorld->stepSimulation(delta/700.f, 30);
+/*
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+  glPushAttrib(GL_VIEWPORT_BIT);
+  glViewport(0,0, rttWidth, rttHeight);
+  glEnable(GL_MULTISAMPLE);*/
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  mat4 modelView;
+  mat4 proj;
+  proj.perspective(75., float(this->width()) / this->height(), 0.1, 1000.);
+
   if (vehicleCam) {
     btVector3 forward = vehicle->getForwardVector();
     btVector3 origin = vehicle->getChassisWorldTransform().getOrigin();
@@ -950,34 +1074,37 @@ void App::paintGL() {
         center.x(), center.y(), center.z(),
         0,1,0);*/
     btVector3 aboveVehicle = origin + btVector3(0,0,2);
-    gluLookAt(pos.x(), pos.y(), pos.z(),
-        aboveVehicle.x(), aboveVehicle.y(), aboveVehicle.z(),
-        0,0,1);
+    modelView.lookAt(
+      vec3(pos.x(), pos.y(), pos.z()),
+      vec3(aboveVehicle.x(), aboveVehicle.y(), aboveVehicle.z()),
+      vec3(0,0,1));
   }
   else
     cam->setTransform(delta / 100.);
 
-  renderer->setShader(diffuse);
+  mat4 modelViewTop = modelView;
 
+  renderer->setShader(diffuse);
   btScalar matrix[16];
   vehicle->getChassisWorldTransform().getOpenGLMatrix(matrix);
-  glPushMatrix(); // TODO: modernize this!
-  glMultMatrixf(matrix);
-  glRotatef(90, 1,0,0);
-  glRotatef(180, 0,1,0);
+  modelViewTop *= toMat4(matrix);
+  modelViewTop.rotate(90, vec3(1,0,0));
+  modelViewTop.rotate(180, vec3(0,1,0));
+  renderer->setUniformMat4("proj", proj);
+  renderer->setUniformMat4("modelView", modelViewTop);
   renderer->drawMesh(truck);
-  glPopMatrix();
 
-  renderer->setShader(wheelShader);
-  renderer->setTexture("wheel", wheelTexture, 0);
+  renderer->setShader(diffuseTextured);
+  renderer->setTexture("texture", wheelTexture, 0);
 
   for (int i = 0; i < vehicle->getNumWheels(); ++i) {
     vehicle->updateWheelTransform(i, true);
     vehicle->getWheelInfo(i).m_worldTransform.getOpenGLMatrix(matrix);
-    glPushMatrix();
-    glMultMatrixf(matrix);
+    modelViewTop = modelView;
+    modelViewTop *= toMat4(matrix);
+    renderer->setUniformMat4("proj", proj);
+    renderer->setUniformMat4("modelView", modelViewTop);
     renderer->drawMesh(wheel);
-    glPopMatrix();
   }
 
   /*renderer->setShader(terrainShader);
@@ -1009,8 +1136,8 @@ void App::paintGL() {
   renderer->drawMesh(barrel);
   glPopMatrix();*/
 
-  scene->draw(delta);
-
+  scene->draw(delta, proj, modelView);
+/*
   renderer->setShader(scattering);
 
   const float PI = M_PI;
@@ -1053,17 +1180,17 @@ void App::paintGL() {
 	renderer->setUniform("scale_over_scale_depth", (1.0f / (outer_radius - inner_radius)) / rayleigh_scale_depth);
 	renderer->setUniform("g", g);
 	renderer->setUniform("g_2", g*g);
+*/
+  //glPushMatrix();
 
-  glPushMatrix();
-
-  glTranslatef(0,-inner_radius, 0);
+  //glTranslatef(0,-inner_radius, 0);
 
   /*GLUquadric* pSphere = gluNewQuadric();
 	gluSphere(pSphere, outer_radius, 100, 50);
 	gluDeleteQuadric(pSphere);*/
   /*glScalef(1,1,1);
   renderer->drawMesh(skyDome);*/
-  glPopMatrix();
+  //glPopMatrix();
 
   renderer->disableShaders();
 
@@ -1072,26 +1199,51 @@ void App::paintGL() {
     dynamicsWorld->getDebugDrawer()->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
     dynamicsWorld->debugDrawWorld();
   }
+/*
+  glPopAttrib();
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-  glMatrixMode(GL_PROJECTION);
+  glClear(GL_COLOR_BUFFER_BIT);
+  glViewport(0,0, this->width(), this->height());
+  glMatrixMode(GL_PROJECTION); // TODO: this must also go
   glLoadIdentity();
-  glOrtho(-.5, .5, .5, -.5, -1000, 1000);
+  glOrtho(-1,1,-1,1,-1,1);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
-  this->renderText(1,0,0, "FPS: 943"); // TODO: doesn't work anymore!
-  //glEnable(GL_DEPTH_TEST);
+  glDisable(GL_DEPTH_TEST);
+  renderer->setShader(blur);
+  renderer->setUniformMat4("previousModelView", previousModelView);
+  renderer->setUniformMat4("proj", proj);
+  renderer->setUniformMat4("modelViewInverse", modelView.inverted());
+  renderer->setUniformMat4("projInverse", proj.inverted());
+  glActiveTexture(GL_TEXTURE0 + 0);
+  glBindTexture(GL_TEXTURE_2D, colorBuffer);
+  renderer->setUniform1i("color", 0);
+  glActiveTexture(GL_TEXTURE0 + 1);
+  glBindTexture(GL_TEXTURE_2D, depthTexture);
+  renderer->setUniform1i("depth", 1);
+
+  glBegin(GL_QUADS);
+  glVertex2f(-1,1);
+  glVertex2f(1,1);
+  glVertex2f(1,-1);
+  glVertex2f(-1,-1);
+  glEnd();
+*/
+  glEnable(GL_DEPTH_TEST);
+  previousModelView = modelView;
 
   this->update();
 }
 
 void App::resizeGL(int width, int height) {
-  /*glViewport(0, 0, width, height);
+  glViewport(0, 0, width, height); // TODO: replace
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   gluPerspective(45., float(width)/height, 0.1, 1000.);
   glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();*/
+  glLoadIdentity();
 }
 
 void App::keyPressEvent(QKeyEvent* event) {
@@ -1126,7 +1278,9 @@ void App::keyPressEvent(QKeyEvent* event) {
     case Qt::Key_R:
       btTransform transform;
       transform.setIdentity();
-      transform.setOrigin(btVector3(0,10,5));
+      btVector3 origin = vehicle->getChassisWorldTransform().getOrigin();
+      origin.setZ(5);
+      transform.setOrigin(origin);
       chassis->setCenterOfMassTransform(transform);
       chassis->setLinearVelocity(btVector3(0,0,0));
       chassis->setAngularVelocity(btVector3(0,0,0));
