@@ -2,13 +2,13 @@ bl_addon_info = {
 "name": "SCENE Export",
 "author": "Matej Drame",
 "version": (0, 1),
-"blender": (2, 5, 6),
-"api": 32412,
-"location": "View3D > File > Export",
+"blender": (2, 5, 7),
+"api": 35266,
+"location": "File > Export",
 "description": "Export to .scene format",
 "warning": "",
-"wiki_url": "http://wiki.blender.org/index.php/Extensions:2.5/Py/Scripts/Import-Export/Raw_Mesh_IO",
-"tracker_url": "https://projects.blender.org/tracker/index.php?func=detail&aid=21733&group_id=153&atid=469",
+"wiki_url": "",
+"tracker_url": "",
 "category": "Import-Export"}
 
 import bpy
@@ -47,12 +47,14 @@ class SceneExporter(bpy.types.Operator):
 def menu_export(self, context):
   import os
   default_path = os.path.splitext(bpy.data.filepath)[0] + ".scene"
-  self.layout.operator(SceneExporter.bl_idname, text="SCENE (.scene)").filepath = default_path
+  self.layout.operator(SceneExporter.bl_idname, text="SCENE (.scene)")#.filepath = default_path
 
 def register():
+  bpy.utils.register_module(__name__)
   bpy.types.INFO_MT_file_export.append(menu_export)
 
 def unregister():
+  bpy.utils.unregister_module(__name__)
   bpy.types.INFO_MT_file_export.remove(menu_export)
 
 if __name__ == "__main__":
