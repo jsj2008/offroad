@@ -112,11 +112,7 @@ private:
   Shader* diffuse;
   Shader* diffuseTextured;
   Shader* scattering;
-  Shader* terrainShader;
-  VertexBuffer* terrainVB;
-  IndexBuffer* terrainIB;
   Texture* grass;
-  GLuint heightfieldId;
   float vehicleCamRotation;
 
   GLuint fbo;
@@ -129,13 +125,11 @@ private:
   mat4 previousModelView;
 
   BlenderScene* scene;
-
   FirstPersonCamera* cam;
   QElapsedTimer* timer;
 
   bool mouseFree;
   bool vehicleCam;
-  bool stipple;
 
   btDynamicsWorld* dynamicsWorld;
   btRigidBody* chassis;
@@ -151,13 +145,10 @@ private:
 
   btRigidBody* groundBody;
   btCollisionShape* groundShape;
-  float* heightfield;
-  int heightfieldWidth;
-  int heightfieldHeight;
-  float yTrans;
 
   DebugDrawer* debugDrawer;
   bool drawDebugInfo;
+  bool stipple;
 
   bool accelerating, breaking, steeringLeft, steeringRight;
   float engineForce, breakingForce, vehicleSteering;

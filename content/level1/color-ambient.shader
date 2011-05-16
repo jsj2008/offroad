@@ -1,6 +1,8 @@
 <program>
   <attribute name="position" unit="0"></attribute>
   <attribute name="normal" unit="1"></attribute>
+  <attribute name="color" unit="2"></attribute>
+  <attribute name="ambient" unit="3"></attribute>
 
   <shader type="vertex">
   in vec3 position;
@@ -15,7 +17,7 @@
   
   void main() {
     gl_Position = proj * modelView * vec4(position, 1);
-    pnormal = normal;
+    pnormal = (modelView * vec4(normal, 0)).xyz;
     pcolor = color;
     pambient = ambient;
   }
@@ -27,9 +29,17 @@
   in vec2 pambient;
   uniform sampler2D texture0;
   uniform sampler2D texture1;
+  uniform mat4 modelView;
+  uniform vec3 light_dir;
  
+  const vec3 light_diffuse = vec3(0.8, 0.8, 0.8);
+
   void main() {
-    gl_FragColor = texture2D(texture1, pcolor) + texture2D(texture0, pambient) - 0.5;
+    vec4 L = vec4(normalize((modelView * vec4(light_dir, 0)).xyz), 0);
+    vec4 N = vec4(normalize(pnormal), 0);
+    vec4 diffuse = vec4(max(-dot(N, L), 0.0) * light_diffuse, 0);
+    vec4 frag_color = texture2D(texture1, pcolor) + texture2D(texture0, pambient) - 0.5;
+    gl_FragColor = diffuse * frag_color;
   }
   </shader>
 </program>

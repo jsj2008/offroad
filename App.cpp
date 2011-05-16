@@ -449,8 +449,6 @@ public:
       glEnableVertexAttribArray(3);
     }
 
-    std::cout << "Vertex size: " << vertexSize << std::endl;
-
     glBindVertexArray(0);
 
     Mesh* mesh = new Mesh;
@@ -594,97 +592,12 @@ void App::initializeGL() {
     wheelTexture = renderer->addTexture("content/truck-tex.jpg");
     skyDome = renderer->addMesh("content/sky-dome.mesh");
     scattering = renderer->addShader("content/scattering.shader");
-    terrainShader = renderer->addShader("content/terrain.shader");
     grass = renderer->addTexture("content/grass.jpg");
     blur = renderer->addShader("content/blur.shader");
 
     this->setupPhysics();
 
     scene = new BlenderScene("content/level1/level1.scene", dynamicsWorld, renderer);
-
-    // TODO: cleanup this mess
-    float contrib = 1.f / 6;
-    float* normals = new float[heightfieldWidth*heightfieldHeight*3];
-    memset(normals, 0, heightfieldWidth*heightfieldHeight*3*sizeof(float));
-    for (int i = 1; i < heightfieldWidth-1; i++) {
-      for (int j = 1; j < heightfieldHeight-1; j++) {
-        vec3 a,b,c;
-        a = vec3(i, heightfield[i*heightfieldHeight+j], j);
-        b = vec3(i+1, heightfield[(i+1)*heightfieldHeight+j], j);
-        c = vec3(i, heightfield[i*heightfieldHeight+j+1], j+1);
-        vec3 v1 = b-a;
-        vec3 v2 = c-a;
-        vec3 normal = -QVector3D::crossProduct(v1, v2).normalized();
-        float x = normal.x() * contrib, y = normal.y() * contrib, z = normal.z() * contrib;
-        normals[(i*heightfieldHeight+j)*3+0] += x;
-        normals[(i*heightfieldHeight+j)*3+1] += y;
-        normals[(i*heightfieldHeight+j)*3+2] += z;
-
-        normals[((i+1)*heightfieldHeight+j)*3+0] += x;
-        normals[((i+1)*heightfieldHeight+j)*3+1] += y;
-        normals[((i+1)*heightfieldHeight+j)*3+2] += z;
-
-        normals[(i*heightfieldHeight+j+1)*3+0] += x;
-        normals[(i*heightfieldHeight+j+1)*3+1] += y;
-        normals[(i*heightfieldHeight+j+1)*3+2] += z;
-
-        // Second triangle.
-        a = vec3(i, heightfield[i*heightfieldHeight+j+1], j+1);
-        b = vec3(i+1, heightfield[(i+1)*heightfieldHeight+j], j);
-        c = vec3(i+1, heightfield[(i+1)*heightfieldHeight+j+1], j+1);
-        v1 = b-a;
-        v2 = c-a;
-        normal = -QVector3D::crossProduct(v1, v2).normalized();
-        x = normal.x() * contrib, y = normal.y() * contrib, z = normal.z() * contrib;
-        normals[(i*heightfieldHeight+j+1)*3+0] += x;
-        normals[(i*heightfieldHeight+j+1)*3+1] += y;
-        normals[(i*heightfieldHeight+j+1)*3+2] += z;
-
-        normals[((i+1)*heightfieldHeight+j)*3+0] += x;
-        normals[((i+1)*heightfieldHeight+j)*3+1] += y;
-        normals[((i+1)*heightfieldHeight+j)*3+2] += z;
-
-        normals[((i+1)*heightfieldHeight+j+1)*3+0] += x;
-        normals[((i+1)*heightfieldHeight+j+1)*3+1] += y;
-        normals[((i+1)*heightfieldHeight+j+1)*3+2] += z;
-      }
-    }
-
-    GLfloat* vertices = new GLfloat[heightfieldWidth * heightfieldHeight * (3+3+2)];
-    GLfloat* ptr = vertices;
-    for (int i = 0; i < heightfieldWidth; ++i) {
-      for (int j = 0; j < heightfieldHeight; ++j) {
-        *ptr++ = i;
-        *ptr++ = heightfield[i*heightfieldHeight+j];
-        *ptr++ = j;
-
-        *ptr++ = normals[(i*heightfieldHeight+j)*3+0];
-        *ptr++ = normals[(i*heightfieldHeight+j)*3+1];
-        *ptr++ = normals[(i*heightfieldHeight+j)*3+2];
-
-        *ptr++ = float(i) / heightfieldWidth;
-        *ptr++ = float(j) / heightfieldHeight;
-      }
-    }
-
-    terrainVB = renderer->addVertexBuffer(reinterpret_cast<const char*>(vertices), sizeof(GLfloat)*(3+3+2)*heightfieldHeight*heightfieldWidth, GL_STATIC_DRAW);
-    delete [] vertices;
-
-    std::vector<int> indices;
-    indices.reserve((heightfieldWidth-1)*(heightfieldWidth-1)*6);
-    for (int i = 0; i < heightfieldWidth-1; ++i) {
-      for (int j = 0; j < heightfieldHeight-1; ++j) {
-        indices.push_back(i*heightfieldHeight+j);
-        indices.push_back((i+1)*heightfieldHeight+j);
-        indices.push_back(i*heightfieldHeight+j+1);
-
-        indices.push_back(i*heightfieldHeight+j+1);
-        indices.push_back((i+1)*heightfieldHeight+j);
-        indices.push_back((i+1)*heightfieldHeight+j+1);
-      }
-    }
-
-    terrainIB = renderer->addIndexBuffer(reinterpret_cast<const char*>(&indices[0]), indices.size()*sizeof(int), GL_STATIC_DRAW);
 
   } catch (load_exception& e) {
     std::cout << "Exception: " << e.what() << std::endl;
@@ -771,40 +684,6 @@ void App::setupPhysics() {
   constraintSolver = new btSequentialImpulseConstraintSolver();
   dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, constraintSolver, collisionConfiguration);
   dynamicsWorld->setGravity(btVector3(0,0,-10));
-
-  heightfieldWidth = 256;
-  heightfieldHeight = 256;
-  heightfield = new float[heightfieldWidth * heightfieldHeight];
-  memset(heightfield, 0, sizeof(float)*heightfieldWidth*heightfieldHeight);
-  // TODO: simplex noise
-
-  float min = 10;
-  float max = -10;
-  for (int i = 0; i < heightfieldWidth; ++i) {
-    for (int j = 0; j < heightfieldHeight; ++j) {
-      float height = -2.5 + sin(float(i*10) / heightfieldWidth)*cos(float(j*10) / heightfieldHeight) * 3;
-      heightfield[i*heightfieldHeight+j] = height;
-      if (height < min)
-        min = height;
-      if (height > max)
-        max = height;
-    }
-  }
-
-  /*yTrans = (max - min) / 2 - (3. / 2) + 1;
-  groundShape = new btHeightfieldTerrainShape(heightfieldWidth, heightfieldHeight,
-      heightfield,
-      btScalar(1),
-      btScalar(min),
-      btScalar(max),
-      upIndex,
-      PHY_FLOAT,
-      false);
-
-  btDefaultMotionState* groundState = new btDefaultMotionState;
-  btRigidBody::btRigidBodyConstructionInfo groundCI(0, groundState, groundShape, btVector3(0,0,0));
-  groundBody = new btRigidBody(groundCI);
-  dynamicsWorld->addRigidBody(groundBody);*/
 
   btCollisionShape *chassisShape = new btBoxShape(btVector3(0.8, 1.8, 0.7));
   btCompoundShape *compound = new btCompoundShape();
@@ -1034,6 +913,8 @@ void BlenderScene::draw(qint64 delta, const mat4& proj, const mat4& modelView) {
       modelViewTop *= toMat4(matrix);
     }
 
+    vec3 light_dir = vec3(0,1,3).normalized();
+    renderer->setUniform3f("light_dir", light_dir);
     renderer->setUniformMat4("proj", proj);
     renderer->setUniformMat4("modelView", modelViewTop);
     renderer->drawMesh(object.mesh);
@@ -1041,9 +922,6 @@ void BlenderScene::draw(qint64 delta, const mat4& proj, const mat4& modelView) {
 }
 
 void App::cleanUpPhysics() {
-  if (heightfield)
-    delete [] heightfield;
-
   delete dynamicsWorld;
   // major TODO !!
 }
@@ -1322,16 +1200,36 @@ void App::keyPressEvent(QKeyEvent* event) {
       stipple = !stipple;
       break;
 
-    case Qt::Key_R:
+    case Qt::Key_Backspace: { // HAHA: jump case label error is just weird even for C++
       btTransform transform;
       transform.setIdentity();
-      btVector3 origin = vehicle->getChassisWorldTransform().getOrigin();
-      origin.setZ(5);
-      transform.setOrigin(origin);
+      transform.setOrigin(btVector3(5, 5, 5));
+      transform.setRotation(btQuaternion(btVector3(0,0,1), M_PI/2));
       chassis->setCenterOfMassTransform(transform);
       chassis->setLinearVelocity(btVector3(0,0,0));
       chassis->setAngularVelocity(btVector3(0,0,0));
       break;
+      }
+
+    case Qt::Key_R: {
+      btTransform transform;
+      transform.setIdentity();
+      btVector3 origin = vehicle->getChassisWorldTransform().getOrigin();
+      btVector3 forward = vehicle->getForwardVector();
+      forward.setZ(0);
+      forward.normalize();
+      float angle = forward.angle(btVector3(0,1,0));
+      float dot = forward.dot(btVector3(0,1,0));
+      if (forward.x() > 0)
+        angle = -angle;
+      origin.setZ(5);
+      transform.setOrigin(origin);
+      transform.setRotation(btQuaternion(btVector3(0,0,1), angle));
+      chassis->setCenterOfMassTransform(transform);
+      chassis->setLinearVelocity(btVector3(0,0,0));
+      chassis->setAngularVelocity(btVector3(0,0,0));
+      break;
+      }
   }
 
   cam->processKeyPress(event->key());
