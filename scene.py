@@ -65,7 +65,8 @@ def export_mesh(obj, scene_path, mesh_name):
     f.write(pack('<I', 2))
     f.write(pack('<I', len(vertices)))
     f.write(pack('<I', len(vertices)))
-    f.write(pack('<I', len(vertices[0])))
+    vertex_size = sum(len(component)*4 for component in vertices[0])
+    f.write(pack('<I', vertex_size))
     f.write(pack('<I', 4))
 
     for v in vertices:
@@ -105,6 +106,7 @@ class SceneExporter(bpy.types.Operator, ExportHelper):
       exported_meshes = []
       for obj in objects:
         x,y,z = obj.location
+        rot = obj.rotation_quaternion
         if obj.active_material == None:
           print(obj.name + ' does not have a material assigned!')
           continue
@@ -118,7 +120,8 @@ class SceneExporter(bpy.types.Operator, ExportHelper):
         for i in range(n_slots):
           f.write(' texture%d="%s"' % (i, os.path.basename(slots[i].texture.image.filepath)))
         f.write('>\n')
-        f.write('  <location x="%f" y="%f" z="%f" />\n' % (x,y,z))
+        f.write('  <position x="%f" y="%f" z="%f" />\n' % (x,y,z))
+        f.write('  <rotation x="%f" y="%f" z="%f" w="%f" />\n' % (rot.x, rot.y, rot.z, rot.w))
         f.write('</object>\n')
         # export appropriate mesh
         if mesh not in exported_meshes:

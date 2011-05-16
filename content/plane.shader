@@ -7,12 +7,13 @@
   in vec3 position;
   in vec3 normal;
   in vec2 coords;
-  
   out vec2 pcoords;
   out vec3 pnormal;
+  uniform mat4 proj;
+  uniform mat4 modelView;
   
   void main() {
-    gl_Position = gl_ModelViewProjectionMatrix * vec4(position, 1);
+    gl_Position = proj * modelView * vec4(position, 1);
     pcoords = coords;
     pnormal = normal;
   }
@@ -21,11 +22,10 @@
   <shader type="pixel">
   in vec3 pnormal;
   in vec2 pcoords;
-  
-  uniform sampler2D wheel;
-  
+  uniform sampler2D texture;
+ 
   void main() {
-    gl_FragColor = texture2D(wheel, pcoords);
+    gl_FragColor = texture2D(texture, pcoords);
   }
   </shader>
 </program>
