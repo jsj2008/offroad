@@ -11,8 +11,6 @@
 
 #include <vehicle/btRaycastVehicle.h>
 
-#include <debug-drawer/GLDebugDrawer.h> // TODO: perfomance!
-
 class FirstPersonCamera;
 class Renderer;
 class Mesh;
@@ -26,6 +24,25 @@ typedef QVector2D vec2;
 typedef QVector3D vec3;
 typedef QVector4D vec4;
 typedef QMatrix4x4 mat4;
+
+class DebugDrawer : public btIDebugDraw {
+private:
+  int debugMode;
+
+public:
+  DebugDrawer();
+  virtual ~DebugDrawer();
+
+  void setModelViewProj(mat4& modelView, mat4& proj);
+
+  virtual void drawLine(const btVector3 &from, const btVector3 &to, const btVector3 &color);
+  virtual void drawLine(const btVector3 &from, const btVector3 &to, const btVector3 &fromColor, const btVector3 &toColor);
+  virtual void drawContactPoint(const btVector3 &PointOnB, const btVector3 &normalOnB, btScalar distance, int lifeTime, const btVector3 &color);
+  virtual void reportErrorWarning(const char* warningString);
+  virtual void draw3dText(const btVector3 &location, const char *textString);
+  virtual void setDebugMode(int debugMode);
+  virtual int getDebugMode() const;
+};
 
 class BlenderScene {
 public:
@@ -48,6 +65,7 @@ private:
       texture3 = NULL;
       shader = NULL;
       body = NULL;
+      ghost = false;
     }
 
     Mesh* mesh;
@@ -58,6 +76,8 @@ private:
     Shader* shader;
     btRigidBody* body;
     QString name;
+    bool ghost;
+    btTransform transform;
   };
 
   QList<RenderableObject> objects;
@@ -80,6 +100,7 @@ private:
   void mousePressEvent(QMouseEvent* event);
 
   void setupPhysics();
+  void updatePhysics(qint64 delta);
   void cleanUpPhysics();
 
   ConfigurationWindow* configWin;
@@ -114,6 +135,7 @@ private:
 
   bool mouseFree;
   bool vehicleCam;
+  bool stipple;
 
   btDynamicsWorld* dynamicsWorld;
   btRigidBody* chassis;
@@ -134,7 +156,7 @@ private:
   int heightfieldHeight;
   float yTrans;
 
-  GLDebugDrawer* debugDrawer;
+  DebugDrawer* debugDrawer;
   bool drawDebugInfo;
 
   bool accelerating, breaking, steeringLeft, steeringRight;

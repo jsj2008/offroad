@@ -1,113 +1,66 @@
 <scene>
-<object name="zavoj" shader="color-ambient.shader" mesh="zavoj.mesh" texture0="plane.jpg" texture1="ground-ambient.png">
-  <location x="-254.880920" y="174.005035" z="8.197681" />
+<object name="skybox" shader="color.shader" mesh="skybox.mesh" texture0="SkyBox-Clouds-Wispy-MidMorning.png">
+  <position x="0.000000" y="0.000000" z="0.000000" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="graffiti.007" shader="color.shader" mesh="graffiti.mesh" texture0="graffiti.jpg">
-  <location x="-115.094727" y="229.975815" z="9.190817" />
+<object name="ovira.001" shader="color.shader" mesh="ovira.mesh" texture0="ovira.png">
+  <position x="-54.660107" y="3.946711" z="1.980116" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="graffiti.006" shader="color.shader" mesh="graffiti.mesh" texture0="graffiti.jpg">
-  <location x="-73.100487" y="220.889191" z="9.190817" />
+<object name="stripe.007" shader="color.shader" mesh="stripe.mesh" texture0="stripes-worn-fixed.jpg">
+  <position x="-34.239685" y="5.310706" z="1.002244" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="graffiti.005" shader="color.shader" mesh="graffiti.mesh" texture0="graffiti.jpg">
-  <location x="-34.843872" y="201.454697" z="9.190817" />
+<object name="stripe.006" shader="color.shader" mesh="stripe.mesh" texture0="stripes-worn-fixed.jpg">
+  <position x="-34.239685" y="2.939235" z="1.002244" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="graffiti.004" shader="color.shader" mesh="graffiti.mesh" texture0="graffiti.jpg">
-  <location x="-0.791435" y="175.725952" z="9.190817" />
+<object name="stripe.005" shader="color.shader" mesh="stripe.mesh" texture0="stripes-worn-fixed.jpg">
+  <position x="-23.279449" y="2.939235" z="1.002244" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="graffiti.003" shader="color.shader" mesh="graffiti.mesh" texture0="graffiti.jpg">
-  <location x="19.405180" y="143.522797" z="9.190817" />
+<object name="stripe.004" shader="color.shader" mesh="stripe.mesh" texture0="stripes-worn-fixed.jpg">
+  <position x="-23.279449" y="5.302684" z="1.002244" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="graffiti.002" shader="color.shader" mesh="graffiti.mesh" texture0="graffiti.jpg">
-  <location x="19.405180" y="101.728729" z="9.190817" />
+<object name="stripe.003" shader="color.shader" mesh="stripe.mesh" texture0="stripes-worn-fixed.jpg">
+  <position x="-12.068985" y="5.302684" z="1.002244" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="graffiti.001" shader="color.shader" mesh="graffiti.mesh" texture0="graffiti.jpg">
-  <location x="19.405180" y="61.258625" z="9.190817" />
+<object name="stripe.002" shader="color.shader" mesh="stripe.mesh" texture0="stripes-worn-fixed.jpg">
+  <position x="-12.068985" y="2.975406" z="1.002244" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="graffiti" shader="color.shader" mesh="graffiti.mesh" texture0="graffiti.jpg">
-  <location x="19.405180" y="21.794357" z="9.190817" />
+<object name="stripe.001" shader="color.shader" mesh="stripe.mesh" texture0="stripes-worn-fixed.jpg">
+  <position x="0.000000" y="5.262080" z="1.002244" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="plane.016" shader="color-ambient.shader" mesh="plane.mesh" texture0="plane.jpg" texture1="ground-ambient.png">
-  <location x="-111.962723" y="113.109924" z="0.000000" />
+<object name="stripe" shader="color.shader" mesh="stripe.mesh" texture0="stripes-worn-fixed.jpg">
+  <position x="0.000000" y="2.975406" z="1.002244" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="barrel.026" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="-42.977287" y="33.220421" z="2.141789" />
+<object name="concrete.003" shader="color.shader" mesh="concrete.mesh" texture0="concrete-new.jpg">
+  <position x="-5.223350" y="6.684233" z="0.882942" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="barrel.025" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="-45.933372" y="33.220421" z="2.141789" />
+<object name="concrete.002" shader="color.shader" mesh="concrete.mesh" texture0="concrete-new.jpg">
+  <position x="-5.223350" y="4.984233" z="0.882942" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="barrel.024" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="-48.951828" y="33.220421" z="2.141789" />
+<object name="concrete.001" shader="color.shader" mesh="concrete.mesh" texture0="concrete-new.jpg">
+  <position x="-5.223350" y="3.284233" z="0.882942" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="barrel.023" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="-48.951828" y="30.333614" z="2.141789" />
+<object name="concrete" shader="color.shader" mesh="concrete.mesh" texture0="concrete-new.jpg">
+  <position x="-5.223350" y="1.584233" z="0.882942" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="barrel.022" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="-48.951828" y="26.615641" z="2.141789" />
+<object name="ovira" shader="color.shader" mesh="ovira.mesh" texture0="ovira.png">
+  <position x="-2.503114" y="-20.004887" z="1.908566" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="barrel.021" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="-48.951828" y="23.452217" z="2.141789" />
-</object>
-<object name="barrel.020" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="-46.560734" y="23.452217" z="2.141789" />
-</object>
-<object name="barrel.019" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="-44.303699" y="23.452217" z="2.141789" />
-</object>
-<object name="barrel.018" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="-41.822788" y="23.452217" z="2.141789" />
-</object>
-<object name="barrel.017" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="-39.532589" y="23.452217" z="2.141789" />
-</object>
-<object name="barrel.016" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="-37.289631" y="23.452217" z="2.141789" />
-</object>
-<object name="barrel.015" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="12.152127" y="2.305147" z="8.375455" />
-</object>
-<object name="barrel.014" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="12.533323" y="5.442380" z="8.669860" />
-</object>
-<object name="barrel.013" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="9.977361" y="5.613340" z="8.942062" />
-</object>
-<object name="barrel.012" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="7.925597" y="4.516785" z="8.576161" />
-</object>
-<object name="barrel.011" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="7.111107" y="8.911777" z="4.542861" />
-</object>
-<object name="barrel.010" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="7.520193" y="5.066371" z="4.542861" />
-</object>
-<object name="barrel.009" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="11.038332" y="5.066371" z="4.542861" />
-</object>
-<object name="barrel.008" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="14.311019" y="4.902737" z="4.542861" />
-</object>
-<object name="barrel.007" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="14.474653" y="2.120953" z="4.542861" />
-</object>
-<object name="barrel.006" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="11.120150" y="1.875501" z="4.542861" />
-</object>
-<object name="barrel.005" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="8.011097" y="1.793684" z="4.542861" />
-</object>
-<object name="barrel.004" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="4.656592" y="1.711867" z="4.542861" />
-</object>
-<object name="barrel.003" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="1.792991" y="1.630050" z="4.542861" />
-</object>
-<object name="barrel" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="1.729492" y="9.350480" z="3.127581" />
-</object>
-<object name="barrel.001" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="2.007597" y="4.909419" z="3.679392" />
-</object>
-<object name="barrel.002" shader="color.shader" mesh="barrel.mesh" texture0="barrel.jpg">
-  <location x="-1.337573" y="6.349761" z="3.568960" />
+<object name="ground" shader="color.shader" mesh="ground.mesh" texture0="sand-dirt.jpg">
+  <position x="0.000000" y="0.000000" z="0.000000" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
 </scene>

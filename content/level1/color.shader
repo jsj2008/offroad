@@ -10,6 +10,7 @@
   out vec2 pcolor;
   uniform mat4 modelView;
   uniform mat4 proj;
+  uniform mat4 mvInvTrans;
   
   void main() {
     gl_Position = proj * modelView * vec4(position, 1);
@@ -24,7 +25,7 @@
   uniform sampler2D texture0;
  
   void main() {
-    gl_FragColor = vec4(1,1,1,1);/*texture2D(texture0, pcolor);*/
+    gl_FragColor = texture2D(texture0, pcolor);
   }
   </shader>
 </program>

@@ -435,6 +435,7 @@ public:
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer->id);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer->id);
+    // TODO: implement VertexFormat structures
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vertexSize, BUFFER_OFFSET(0));
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, vertexSize, BUFFER_OFFSET(3*4));
@@ -447,6 +448,8 @@ public:
       glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, vertexSize, BUFFER_OFFSET(8*4));
       glEnableVertexAttribArray(3);
     }
+
+    std::cout << "Vertex size: " << vertexSize << std::endl;
 
     glBindVertexArray(0);
 
@@ -520,6 +523,7 @@ App::App(const QGLFormat& format, ConfigurationWindow* configWin) : QGLWidget(fo
   engineForce = breakingForce = vehicleSteering = 0;
   mouseFree = true;
   vehicleCamRotation = 0;
+  stipple = true;
 }
 
 App::~App() {
@@ -743,22 +747,21 @@ void App::initializeGL() {
 }
 
 void App::setupPhysics() {
-  float connectionHeight = -1;
-  float cubeHalfExtents = 2.5;
+  float connectionHeight = -0.1;
   int rightIndex = 0;
   int upIndex = 2;
   int forwardIndex = 1;
+  float rollInfluence = 1.1f;
+  float	wheelRadius = 0.5;
+  float	wheelWidth = 0.5f;
+  float	wheelFriction = 100;
+  float	suspensionStiffness = 40.f;
+  float	suspensionDamping = 3.3f;
+  float	suspensionCompression = 4.4f;
   btVector3 wheelDirection(0,0,-1);
   btVector3 wheelAxle(1,0,0);
-  btScalar suspensionRestLength(0.9);
-  float wheelRadius = 1.5;
-  float wheelWidth = 1;
-  float wheelFriction = 2000;
-  float suspensionStiffness = 20.f;
-  float suspensionDamping = 0.6f;
-  float suspensionCompression = 1.5;
-  float rollInfluence = 0.1f;
-  float vehicleMass = 500;
+  btScalar suspensionRestLength(0.8);
+  float vehicleMass = 1500;
 
   collisionConfiguration = new btDefaultCollisionConfiguration();
   dispatcher = new btCollisionDispatcher(collisionConfiguration);
@@ -803,40 +806,48 @@ void App::setupPhysics() {
   groundBody = new btRigidBody(groundCI);
   dynamicsWorld->addRigidBody(groundBody);*/
 
-  btCollisionShape *chassisShape = new btBoxShape(btVector3(2., 4, 0.5f));
+  btCollisionShape *chassisShape = new btBoxShape(btVector3(0.8, 1.8, 0.7));
   btCompoundShape *compound = new btCompoundShape();
   btTransform localTrans;
   localTrans.setIdentity();
-  localTrans.setOrigin(btVector3(0,1,0));
+  //localTrans.setOrigin(btVector3(0,1,0));
 
   compound->addChildShape(localTrans, chassisShape);
 
-  wheelShape = new btCylinderShapeX(btVector3(wheelWidth, wheelRadius, wheelRadius));
+  wheelShape = new btCylinderShapeX(btVector3(wheelWidth / 2, 0.4, 0.4));
+
+  btVector3 cp1( 1.0,  1.4, connectionHeight);
+  btVector3 cp2(-1.0,  1.4, connectionHeight);
+  btVector3 cp3( 1.0, -1.2, connectionHeight);
+  btVector3 cp4(-1.0, -1.2, connectionHeight);
+
+  btVector3 off(0,0,-0.4);
 
   btTransform tr1;
   tr1.setIdentity();
-  tr1.setOrigin(btVector3(cubeHalfExtents-(0.3*wheelWidth),2*cubeHalfExtents+wheelRadius, connectionHeight));
+  tr1.setOrigin(cp1 + off);
   compound->addChildShape(tr1, wheelShape);
 
   btTransform tr2;
   tr2.setIdentity();
-  tr2.setOrigin(btVector3(-cubeHalfExtents+(0.3*wheelWidth),2*cubeHalfExtents+wheelRadius, connectionHeight));
+  tr2.setOrigin(cp2 + off);
   compound->addChildShape(tr2, wheelShape);
 
   btTransform tr3;
   tr3.setIdentity();
-  tr3.setOrigin(btVector3(-cubeHalfExtents+(0.3*wheelWidth),-2*cubeHalfExtents+wheelRadius, connectionHeight));
+  tr3.setOrigin(cp3 + off);
   compound->addChildShape(tr3, wheelShape);
 
   btTransform tr4;
   tr4.setIdentity();
-  tr4.setOrigin(btVector3(cubeHalfExtents-(0.3*wheelWidth),-2*cubeHalfExtents+wheelRadius, connectionHeight));
+  tr4.setOrigin(cp4 + off);
   compound->addChildShape(tr4, wheelShape);
 
   btVector3 localInertia(0,0,0);
   btTransform startTransform;
   startTransform.setIdentity();
-  startTransform.setOrigin(btVector3(0, 10, 5));
+  startTransform.setOrigin(btVector3(5, 5, 5));
+  startTransform.setRotation(btQuaternion(btVector3(0,0,1), M_PI/2));
   chassisShape->calculateLocalInertia(vehicleMass, localInertia);
   btDefaultMotionState* chassisState = new btDefaultMotionState(startTransform);
   btRigidBody::btRigidBodyConstructionInfo chassisCI(vehicleMass, chassisState, compound, localInertia);
@@ -850,17 +861,10 @@ void App::setupPhysics() {
 
   vehicle->setCoordinateSystem(rightIndex,upIndex,forwardIndex);
 
-  btVector3 connectionPoint(cubeHalfExtents-(0.3*wheelWidth),2*cubeHalfExtents+wheelRadius, connectionHeight);
-  vehicle->addWheel(connectionPoint, wheelDirection, wheelAxle, suspensionRestLength, wheelRadius, tuning, true);
-
-  connectionPoint = btVector3(-cubeHalfExtents+(0.3*wheelWidth),2*cubeHalfExtents+wheelRadius, connectionHeight);
-  vehicle->addWheel(connectionPoint, wheelDirection, wheelAxle, suspensionRestLength, wheelRadius, tuning, true);
-
-  connectionPoint = btVector3(-cubeHalfExtents+(0.3*wheelWidth),-2*cubeHalfExtents+wheelRadius, connectionHeight);
-  vehicle->addWheel(connectionPoint, wheelDirection, wheelAxle, suspensionRestLength, wheelRadius, tuning, false);
-
-  connectionPoint = btVector3(cubeHalfExtents-(0.3*wheelWidth),-2*cubeHalfExtents+wheelRadius, connectionHeight);
-  vehicle->addWheel(connectionPoint, wheelDirection, wheelAxle, suspensionRestLength, wheelRadius, tuning, false);
+  vehicle->addWheel(cp1, wheelDirection, wheelAxle, suspensionRestLength, wheelRadius, tuning, true);
+  vehicle->addWheel(cp2, wheelDirection, wheelAxle, suspensionRestLength, wheelRadius, tuning, true);
+  vehicle->addWheel(cp3, wheelDirection, wheelAxle, suspensionRestLength, wheelRadius, tuning, false);
+  vehicle->addWheel(cp4, wheelDirection, wheelAxle, suspensionRestLength, wheelRadius, tuning, false);
 
   for (int i = 0; i < vehicle->getNumWheels(); ++i) {
     btWheelInfo& wheel = vehicle->getWheelInfo(i);
@@ -871,7 +875,7 @@ void App::setupPhysics() {
     wheel.m_rollInfluence = rollInfluence;
   }
 
-  debugDrawer = new GLDebugDrawer();
+  debugDrawer = new DebugDrawer();
   dynamicsWorld->setDebugDrawer(debugDrawer);
 }
 
@@ -954,6 +958,7 @@ BlenderScene::BlenderScene(const char* fileName, btDynamicsWorld* world, Rendere
     if (physicsDataPresent) {
       object.body = importer->getRigidBodyByName(object.name.toStdString().c_str());
       if (object.body != NULL && object.body->getMotionState() == NULL) {
+        std::cout << "Adding " << object.name.toStdString() << "..." << std::endl;
         btVector3 translation = object.body->getCenterOfMassPosition();
         btQuaternion orientation = object.body->getOrientation();
         btTransform transform(orientation, translation);
@@ -961,6 +966,29 @@ BlenderScene::BlenderScene(const char* fileName, btDynamicsWorld* world, Rendere
         object.body->setMotionState(state);
       }
     }
+
+    if (object.body == NULL) {
+      std::cout << "Adding a ghost called " << object.name.toStdString() << "..." << std::endl;
+      object.ghost = true;
+      QDomElement position = nodes.at(i).firstChildElement("position");
+      QDomElement rotation = nodes.at(i).firstChildElement("rotation");
+      if (position.isNull() || rotation.isNull() ||
+        !position.hasAttribute("x") || !position.hasAttribute("y") || !position.hasAttribute("z") ||
+        !rotation.hasAttribute("x") || !rotation.hasAttribute("y") || !rotation.hasAttribute("z") || !rotation.hasAttribute("w")) {
+        std::cout << "Incorrectly formatted .scene file (missing attributes/nodes)!" << std::endl;
+        continue;
+      }
+
+      btVector3 pos(position.attribute("x").toFloat(), position.attribute("y").toFloat(), position.attribute("z").toFloat());
+      btQuaternion rot(rotation.attribute("x").toFloat(),
+          rotation.attribute("y").toFloat(),
+          rotation.attribute("z").toFloat(),
+          rotation.attribute("w").toFloat());
+      object.transform.setIdentity();
+      object.transform.setOrigin(pos);
+      object.transform.setRotation(rot);
+    }
+
     objects << object;
   }
 
@@ -978,8 +1006,8 @@ void BlenderScene::draw(qint64 delta, const mat4& proj, const mat4& modelView) {
     // TODO: sort objects by shader
     // TODO: put objects into some kind of space tree
 
-    if (object.shader != NULL)
-      renderer->setShader(object.shader);
+    if (object.shader == NULL || object.mesh == NULL)
+      continue;
 
     if (object.texture0 != NULL)
       renderer->setTexture("texture0", object.texture0, 0);
@@ -990,20 +1018,25 @@ void BlenderScene::draw(qint64 delta, const mat4& proj, const mat4& modelView) {
     if (object.texture3 != NULL)
       renderer->setTexture("texture3", object.texture3, 3);
 
-    if (object.mesh != NULL && object.body != NULL) {
+    mat4 modelViewTop = modelView;
+
+    if (object.body != NULL) {
       btMotionState* state = object.body->getMotionState();
-      if (state != NULL) {
-        btTransform transform;
-        btScalar matrix[16];
-        state->getWorldTransform(transform);
-        transform.getOpenGLMatrix(matrix);
-        mat4 modelViewTop = modelView;
-        modelViewTop *= toMat4(matrix);
-        renderer->setUniformMat4("proj", proj);
-        renderer->setUniformMat4("modelView", modelViewTop);
-        renderer->drawMesh(object.mesh);
-      }
+      btTransform transform;
+      btScalar matrix[16];
+      state->getWorldTransform(transform);
+      transform.getOpenGLMatrix(matrix);
+      modelViewTop *= toMat4(matrix);
     }
+    else {
+      btScalar matrix[16];
+      object.transform.getOpenGLMatrix(matrix);
+      modelViewTop *= toMat4(matrix);
+    }
+
+    renderer->setUniformMat4("proj", proj);
+    renderer->setUniformMat4("modelView", modelViewTop);
+    renderer->drawMesh(object.mesh);
   }
 }
 
@@ -1015,16 +1048,14 @@ void App::cleanUpPhysics() {
   // major TODO !!
 }
 
-void App::paintGL() {
-  qint64 delta = timer->restart();
-
+void App::updatePhysics(qint64 delta) {
   if (accelerating)
     engineForce = 2000;
   else
     engineForce = 0;
 
   if (breaking)
-    breakingForce = 100;
+    breakingForce = 300;
   else
     breakingForce = 0;
 
@@ -1049,38 +1080,34 @@ void App::paintGL() {
   vehicle->setSteeringValue(vehicleSteering, 1);
 
   dynamicsWorld->stepSimulation(delta/700.f, 30);
+}
+
+void App::paintGL() {
+  qint64 delta = timer->restart();
+  updatePhysics(delta);
 /*
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
   glPushAttrib(GL_VIEWPORT_BIT);
-  glViewport(0,0, rttWidth, rttHeight);
-  glEnable(GL_MULTISAMPLE);*/
+  glViewport(0,0, rttWidth, rttHeight);*/
 
+  glEnable(GL_DEPTH_TEST);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   mat4 modelView;
   mat4 proj;
-  proj.perspective(75., float(this->width()) / this->height(), 0.1, 1000.);
+  proj.perspective(75., float(width()) / height(), 0.1, 1000.);
 
   if (vehicleCam) {
     btVector3 forward = vehicle->getForwardVector();
     btVector3 origin = vehicle->getChassisWorldTransform().getOrigin();
-    btVector3 pos = origin - 10*forward + btVector3(0,0,8);
-    /*mat4 transform;
-    transform.translate(origin.x(), origin.y(), origin.z());
-    transform.rotate(-vehicleCamRotation*40, 0,1,0);
-    transform.translate(-origin.x(), -origin.y(), -origin.z());
-    vec3 rotatedPosition = transform * vec3(pos.x(), pos.y(), pos.z());
-    btVector3 center = origin + btVector3(0,0,2);
-    gluLookAt(rotatedPosition.x(), rotatedPosition.y(), rotatedPosition.z(),
-        center.x(), center.y(), center.z(),
-        0,1,0);*/
-    btVector3 aboveVehicle = origin + btVector3(0,0,2);
+    btVector3 pos = origin - 4*forward + btVector3(0,0,2.5);
+    btVector3 aboveVehicle = origin + btVector3(0,0,0.5);
     modelView.lookAt(
       vec3(pos.x(), pos.y(), pos.z()),
       vec3(aboveVehicle.x(), aboveVehicle.y(), aboveVehicle.z()),
       vec3(0,0,1));
   }
   else
-    cam->setTransform(delta / 100.);
+    cam->setTransform(delta / 100., modelView);
 
   mat4 modelViewTop = modelView;
 
@@ -1090,6 +1117,7 @@ void App::paintGL() {
   modelViewTop *= toMat4(matrix);
   modelViewTop.rotate(90, vec3(1,0,0));
   modelViewTop.rotate(180, vec3(0,1,0));
+  modelViewTop.scale(0.35, 0.35, 0.35);
   renderer->setUniformMat4("proj", proj);
   renderer->setUniformMat4("modelView", modelViewTop);
   renderer->drawMesh(truck);
@@ -1102,10 +1130,13 @@ void App::paintGL() {
     vehicle->getWheelInfo(i).m_worldTransform.getOpenGLMatrix(matrix);
     modelViewTop = modelView;
     modelViewTop *= toMat4(matrix);
+    modelViewTop.scale(0.4, 0.3, 0.3);
     renderer->setUniformMat4("proj", proj);
     renderer->setUniformMat4("modelView", modelViewTop);
     renderer->drawMesh(wheel);
   }
+
+  scene->draw(delta, proj, modelView);
 
   /*renderer->setShader(terrainShader);
   renderer->setTexture("grass", grass, 0);
@@ -1136,7 +1167,6 @@ void App::paintGL() {
   renderer->drawMesh(barrel);
   glPopMatrix();*/
 
-  scene->draw(delta, proj, modelView);
 /*
   renderer->setShader(scattering);
 
@@ -1194,10 +1224,25 @@ void App::paintGL() {
 
   renderer->disableShaders();
 
-  //glDisable(GL_DEPTH_TEST);
   if (drawDebugInfo) {
-    dynamicsWorld->getDebugDrawer()->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+    // TODO: convert this crap to shader based.
+    if (stipple) {
+      glDisable(GL_DEPTH_TEST);
+      glEnable(GL_LINE_STIPPLE);
+      glLineStipple(1, 0x00FF);
+    }
+
+    DebugDrawer* dd = static_cast<DebugDrawer*>(dynamicsWorld->getDebugDrawer());
+    dd->setModelViewProj(modelView, proj);
+    dd->setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawAabb);
     dynamicsWorld->debugDrawWorld();
+
+    if (stipple) {
+      // Second pass for visible edges.
+      glEnable(GL_DEPTH_TEST);
+      glDisable(GL_LINE_STIPPLE);
+      dynamicsWorld->debugDrawWorld();
+    }
   }
 /*
   glPopAttrib();
@@ -1231,19 +1276,18 @@ void App::paintGL() {
   glVertex2f(-1,-1);
   glEnd();
 */
-  glEnable(GL_DEPTH_TEST);
   previousModelView = modelView;
 
-  this->update();
+  update();
 }
 
 void App::resizeGL(int width, int height) {
-  glViewport(0, 0, width, height); // TODO: replace
+  /*glViewport(0, 0, width, height); // TODO: replace
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   gluPerspective(45., float(width)/height, 0.1, 1000.);
   glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
+  glLoadIdentity();*/
 }
 
 void App::keyPressEvent(QKeyEvent* event) {
@@ -1273,6 +1317,9 @@ void App::keyPressEvent(QKeyEvent* event) {
       break;
     case Qt::Key_V:
       vehicleCam = !vehicleCam;
+      break;
+    case Qt::Key_O:
+      stipple = !stipple;
       break;
 
     case Qt::Key_R:
@@ -1328,6 +1375,56 @@ void App::mousePressEvent(QMouseEvent* event) {
     this->grabKeyboard();
     this->setCursor(Qt::BlankCursor);
   }
+}
+
+DebugDrawer::DebugDrawer() {}
+DebugDrawer::~DebugDrawer() {}
+
+void DebugDrawer::setModelViewProj(mat4& modelView, mat4& proj) {
+  glUseProgram(0);
+
+  // TODO: hmmm...
+  glMatrixMode(GL_PROJECTION);
+  GLfloat mat[16];
+  for (int i = 0; i < 16; ++i) mat[i] = proj.data()[i];
+  glLoadMatrixf(mat);
+
+  glMatrixMode(GL_MODELVIEW);
+  for (int i = 0; i < 16; ++i) mat[i] = modelView.data()[i];
+  glLoadMatrixf(mat);
+}
+
+void DebugDrawer::drawLine(const btVector3& from,const btVector3& to,const btVector3& fromColor, const btVector3& toColor) {
+  // TODO: old crap old crap old crap
+  glBegin(GL_LINES);
+  glColor3f(fromColor.getX(), fromColor.getY(), fromColor.getZ());
+  glVertex3d(from.getX(), from.getY(), from.getZ());
+  glColor3f(toColor.getX(), toColor.getY(), toColor.getZ());
+  glVertex3d(to.getX(), to.getY(), to.getZ());
+  glEnd();
+}
+
+void DebugDrawer::drawLine(const btVector3& from,const btVector3& to,const btVector3& color) {
+  this->drawLine(from, to, color, color);
+}
+
+void DebugDrawer::drawContactPoint(const btVector3& PointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color) {
+}
+
+void DebugDrawer::reportErrorWarning(const char* warningString) {
+  std::cout << "Bullet warning: " << warningString << std::endl;
+}
+
+void DebugDrawer::draw3dText(const btVector3& location,const char* textString) {
+  std::cout << "Bullet: " << textString << std::endl;
+}
+
+void DebugDrawer::setDebugMode(int debugMode) {
+  this->debugMode = debugMode;
+}
+
+int DebugDrawer::getDebugMode() const {
+  return debugMode;
 }
 
 PointerSlider::PointerSlider(float* var, float min, float max) : QSlider(Qt::Horizontal) {

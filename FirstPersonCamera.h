@@ -50,7 +50,7 @@ public:
     direction.normalize();
   }
 
-  void setTransform(float factor) {
+  void setTransform(float factor, mat4& modelView) {
     if (movingForward)
       position += direction * factor;
     if (movingBackward)
@@ -60,12 +60,9 @@ public:
     if (movingRight)
       position -= QVector3D::crossProduct(direction, vec3(0,1,0)).normalized() * factor;
 
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    gluLookAt(position.x(), position.z(), position.y(),
-              position.x()+direction.x(), position.z()+direction.z(), position.y()+direction.y(),
-              0,0,1);
+    vec3 pos = vec3(position.x(), position.z(), position.y());
+    vec3 dir = vec3(direction.x(), direction.z(), direction.y());
+    modelView.lookAt(pos, pos+dir, vec3(0,0,1));
   }
 
   vec3 getPosition() {
