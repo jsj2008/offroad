@@ -946,7 +946,9 @@ void App::updatePhysics(qint64 delta) {
   if (steeringRight)
     vehicleSteering -= 0.004 * delta;
 
-  //vehicleSteering += (vehicleSteering > 0 ? -1:1) * 0.0001 * delta;
+  // Gravitate steering to 0 based on the distance traveled.
+  float distanceTraveled = vehicle->getCurrentSpeedKmHour() * delta * 0.00001;
+  vehicleSteering += (vehicleSteering > 0 ? -1:1) * distanceTraveled;
   vehicleSteering = clamp(vehicleSteering, -maxSteering, maxSteering);
 
   vehicle->setSteeringValue(vehicleSteering, 0);
