@@ -886,6 +886,8 @@ void BlenderScene::draw(qint64 delta, const mat4& proj, const mat4& modelView) {
     if (object.shader == NULL || object.mesh == NULL)
       continue;
 
+    renderer->setShader(object.shader);
+
     if (object.texture0 != NULL)
       renderer->setTexture("texture0", object.texture0, 0);
     if (object.texture1 != NULL)

@@ -34,9 +34,9 @@
   void main() {
     vec4 L = vec4(normalize((modelView * vec4(light_dir, 0)).xyz), 0);
     vec4 N = vec4(normalize(pnormal), 0);
-    vec4 diffuse = vec4(max(-dot(N, L), 0.0) * light_diffuse, 0);
+    vec4 diffuse = vec4(max(dot(N, L), 0.0) * light_diffuse, 0);
     vec4 frag_color = texture2D(texture0, pcolor);
-    gl_FragColor = diffuse;
+    gl_FragColor = frag_color * diffuse;
   }
   ]]>
   </shader>
