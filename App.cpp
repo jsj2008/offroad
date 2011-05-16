@@ -520,8 +520,8 @@ App::App(const QGLFormat& format, ConfigurationWindow* configWin) : QGLWidget(fo
   vehicleCam = false;
   engineForce = breakingForce = vehicleSteering = 0;
   mouseFree = true;
-  vehicleCamRotation = 0;
   stipple = true;
+  camDir = btVector3(0,1,0);
 }
 
 App::~App() {
@@ -592,7 +592,6 @@ void App::initializeGL() {
     wheelTexture = renderer->addTexture("content/truck-tex.jpg");
     skyDome = renderer->addMesh("content/sky-dome.mesh");
     scattering = renderer->addShader("content/scattering.shader");
-    grass = renderer->addTexture("content/grass.jpg");
     blur = renderer->addShader("content/blur.shader");
 
     this->setupPhysics();
@@ -689,7 +688,6 @@ void App::setupPhysics() {
   btCompoundShape *compound = new btCompoundShape();
   btTransform localTrans;
   localTrans.setIdentity();
-  //localTrans.setOrigin(btVector3(0,1,0));
 
   compound->addChildShape(localTrans, chassisShape);
 
@@ -951,9 +949,6 @@ void App::updatePhysics(qint64 delta) {
   //vehicleSteering += (vehicleSteering > 0 ? -1:1) * 0.0001 * delta;
   vehicleSteering = clamp(vehicleSteering, -maxSteering, maxSteering);
 
-  vehicleCamRotation += (vehicleSteering > vehicleCamRotation ? 1:-1) * 0.001 * delta;
-  vehicleCamRotation = clamp(vehicleCamRotation, -maxSteering, maxSteering);
-
   vehicle->setSteeringValue(vehicleSteering, 0);
   vehicle->setSteeringValue(vehicleSteering, 1);
 
@@ -976,8 +971,9 @@ void App::paintGL() {
 
   if (vehicleCam) {
     btVector3 forward = vehicle->getForwardVector();
+    camDir = camDir.lerp(forward, delta*0.001);
     btVector3 origin = vehicle->getChassisWorldTransform().getOrigin();
-    btVector3 pos = origin - 4*forward + btVector3(0,0,2.5);
+    btVector3 pos = origin - 4*camDir + btVector3(0,0,2.5);
     btVector3 aboveVehicle = origin + btVector3(0,0,0.5);
     modelView.lookAt(
       vec3(pos.x(), pos.y(), pos.z()),
@@ -1219,7 +1215,6 @@ void App::keyPressEvent(QKeyEvent* event) {
       forward.setZ(0);
       forward.normalize();
       float angle = forward.angle(btVector3(0,1,0));
-      float dot = forward.dot(btVector3(0,1,0));
       if (forward.x() > 0)
         angle = -angle;
       origin.setZ(5);
@@ -1314,7 +1309,6 @@ void DebugDrawer::reportErrorWarning(const char* warningString) {
 }
 
 void DebugDrawer::draw3dText(const btVector3& location,const char* textString) {
-  std::cout << "Bullet: " << textString << std::endl;
 }
 
 void DebugDrawer::setDebugMode(int debugMode) {

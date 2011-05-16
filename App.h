@@ -112,8 +112,6 @@ private:
   Shader* diffuse;
   Shader* diffuseTextured;
   Shader* scattering;
-  Texture* grass;
-  float vehicleCamRotation;
 
   GLuint fbo;
   GLuint depthBuffer;
@@ -130,6 +128,7 @@ private:
 
   bool mouseFree;
   bool vehicleCam;
+  btVector3 camDir;
 
   btDynamicsWorld* dynamicsWorld;
   btRigidBody* chassis;
