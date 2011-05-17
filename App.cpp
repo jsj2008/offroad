@@ -922,6 +922,24 @@ void BlenderScene::draw(qint64 delta,
     const mat4& modelView,
     GLuint depthTexture, // TODO: refactor this ASAP
     btRaycastVehicle* vehicle) {
+
+  mat4 lightModelView;
+  mat4 lightProj;
+  lightProj.ortho(-5, 5, -5, 5, -10, 100);
+
+  btVector3 center = vehicle->getChassisWorldTransform().getOrigin();
+  vec3 cen = vec3(center.x(), center.y(), center.z());
+  lightModelView.lookAt(
+    cen + vec3(10, 10, 10),
+    cen,
+    vec3(0,1,0));
+
+  const GLfloat bias[16] = {
+    0.5, 0.0, 0.0, 0.0,
+    0.0, 0.5, 0.0, 0.0,
+    0.0, 0.0, 0.5, 0.0,
+    0.5, 0.5, 0.5, 1.0};
+
   for (int i = 0; i < objects.size(); ++i) {
     RenderableObject object = objects.at(i);
 
@@ -943,6 +961,7 @@ void BlenderScene::draw(qint64 delta,
       renderer->setTexture("texture3", object.texture3, 3);
 
     mat4 modelViewTop = modelView;
+    mat4 model;
 
     if (object.body != NULL) {
       btMotionState* state = object.body->getMotionState();
@@ -951,43 +970,23 @@ void BlenderScene::draw(qint64 delta,
       state->getWorldTransform(transform);
       transform.getOpenGLMatrix(matrix);
       modelViewTop *= toMat4(matrix);
+      model *= toMat4(matrix);
     }
     else {
       btScalar matrix[16];
       object.transform.getOpenGLMatrix(matrix);
       modelViewTop *= toMat4(matrix);
+      model *= toMat4(matrix);
     }
 
-    if (object.name == "ground") {
-      mat4 lightModelView;
-      mat4 lightProj;
-    /*  lightModelView.lookAt(
-        vec3(50, 50, 50),
-        vec3(0,0,0),
-        vec3(0,1,0));*/
-      lightProj.ortho(-5, 5, -5, 5, -10, 100);
-      //lightProj.perspective(75., 1, 0.5, 700.);
-
-      btVector3 center = vehicle->getChassisWorldTransform().getOrigin();
-      vec3 cen = vec3(center.x(), center.y(), center.z());
-      lightModelView.lookAt(
-        cen + vec3(10, 10, 10),
-        cen,
-        vec3(0,1,0));
-
-      const GLfloat bias[16] = {
-        0.5, 0.0, 0.0, 0.0,
-        0.0, 0.5, 0.0, 0.0,
-        0.0, 0.0, 0.5, 0.0,
-        0.5, 0.5, 0.5, 1.0};
-
-      glActiveTexture(GL_TEXTURE0 + 1);
-      glBindTexture(GL_TEXTURE_2D, depthTexture);
-      renderer->setUniform1i("depth", 1);
-      renderer->setUniform4fv("bias", bias);
-      renderer->setUniformMat4("shadowProj", lightProj);
-      renderer->setUniformMat4("shadowModelView", lightModelView);
-    }
+    // TODO: this overrides second unit, make this more general
+    glActiveTexture(GL_TEXTURE0 + 1);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    renderer->setUniform1i("depth", 1);
+    renderer->setUniform4fv("bias", bias);
+    renderer->setUniformMat4("shadowProj", lightProj);
+    renderer->setUniformMat4("shadowModelView", lightModelView);
+    renderer->setUniformMat4("model", model);
 
     vec3 light_dir = vec3(0,1,3).normalized();
     renderer->setUniform3f("light_dir", light_dir);
@@ -1047,8 +1046,6 @@ void App::paintGL() {
     glViewport(0,0, shadowMapWidth, shadowMapHeight);
     glClear(GL_DEPTH_BUFFER_BIT);
     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-    //glEnable(GL_CULL_FACE);
-    //glCullFace(GL_FRONT);
 
     mat4 modelView;
     mat4 proj;
@@ -1086,8 +1083,6 @@ void App::paintGL() {
     glPopAttrib();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    //glDisable(GL_CULL_FACE);
-    //glCullFace(GL_BACK);
   }
 
   if (blurEnabled) {

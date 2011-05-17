@@ -16,10 +16,11 @@
   uniform mat4 bias;
   uniform mat4 shadowProj;
   uniform mat4 shadowModelView;
+  uniform mat4 model;
  
   void main() {
     gl_Position = proj * modelView * vec4(position, 1);
-    shadowCoord = bias * shadowProj * shadowModelView * vec4(position, 1);
+    shadowCoord = bias * shadowProj * shadowModelView * model * vec4(position, 1);
     pnormal = (modelView * vec4(normal, 0)).xyz;
     pcolor = color;
   }
