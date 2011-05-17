@@ -553,7 +553,7 @@ App::~App() {
 }
 
 void App::initializeGL() {
-  this->setWindowTitle("Offroad");
+  this->setWindowTitle("Offroad 2");
   this->setMouseTracking(true);
   this->grabKeyboard();
   this->setCursor(Qt::BlankCursor);
