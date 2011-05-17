@@ -26,6 +26,10 @@ T clamp(const T& value, const T& low, const T& high) {
   return value < low ? low : (value > high ? high : value);
 }
 
+vec3 btToQt(const btVector3& v) {
+  return vec3(v.x(), v.y(), v.z());
+}
+
 void checkErrors() {
   using namespace std;
   GLenum error = glGetError();
@@ -355,7 +359,7 @@ public:
     glUniformMatrix4fv(glGetUniformLocation(currentProgram, name), 1, GL_FALSE, mat);
   }
 
-  void setUniform4fv(const char* name, float* value) {
+  void setUniform4fv(const char* name, const GLfloat* value) {
     glUniformMatrix4fv(glGetUniformLocation(currentProgram, name), 1, GL_FALSE, value);
   }
 
@@ -662,8 +666,8 @@ void App::initializeGL() {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   // Build another FBO for shadows.
-  shadowMapWidth = 1024;
-  shadowMapHeight = 1024;
+  shadowMapWidth = 2048;
+  shadowMapHeight = 2048;
 	
   glGenTextures(1, &shadowDepthTexture);
   glBindTexture(GL_TEXTURE_2D, shadowDepthTexture);
@@ -913,7 +917,11 @@ BlenderScene::~BlenderScene() {
   delete importer;
 }
 
-void BlenderScene::draw(qint64 delta, const mat4& proj, const mat4& modelView) {
+void BlenderScene::draw(qint64 delta,
+    const mat4& proj,
+    const mat4& modelView,
+    GLuint depthTexture, // TODO: refactor this ASAP
+    btRaycastVehicle* vehicle) {
   for (int i = 0; i < objects.size(); ++i) {
     RenderableObject object = objects.at(i);
 
@@ -948,6 +956,37 @@ void BlenderScene::draw(qint64 delta, const mat4& proj, const mat4& modelView) {
       btScalar matrix[16];
       object.transform.getOpenGLMatrix(matrix);
       modelViewTop *= toMat4(matrix);
+    }
+
+    if (object.name == "ground") {
+      mat4 lightModelView;
+      mat4 lightProj;
+    /*  lightModelView.lookAt(
+        vec3(50, 50, 50),
+        vec3(0,0,0),
+        vec3(0,1,0));*/
+      lightProj.ortho(-5, 5, -5, 5, -10, 100);
+      //lightProj.perspective(75., 1, 0.5, 700.);
+
+      btVector3 center = vehicle->getChassisWorldTransform().getOrigin();
+      vec3 cen = vec3(center.x(), center.y(), center.z());
+      lightModelView.lookAt(
+        cen + vec3(10, 10, 10),
+        cen,
+        vec3(0,1,0));
+
+      const GLfloat bias[16] = {
+        0.5, 0.0, 0.0, 0.0,
+        0.0, 0.5, 0.0, 0.0,
+        0.0, 0.0, 0.5, 0.0,
+        0.5, 0.5, 0.5, 1.0};
+
+      glActiveTexture(GL_TEXTURE0 + 1);
+      glBindTexture(GL_TEXTURE_2D, depthTexture);
+      renderer->setUniform1i("depth", 1);
+      renderer->setUniform4fv("bias", bias);
+      renderer->setUniformMat4("shadowProj", lightProj);
+      renderer->setUniformMat4("shadowModelView", lightModelView);
     }
 
     vec3 light_dir = vec3(0,1,3).normalized();
@@ -1008,22 +1047,17 @@ void App::paintGL() {
     glViewport(0,0, shadowMapWidth, shadowMapHeight);
     glClear(GL_DEPTH_BUFFER_BIT);
     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
+    //glEnable(GL_CULL_FACE);
+    //glCullFace(GL_FRONT);
 
     mat4 modelView;
     mat4 proj;
+    vec3 center = btToQt(vehicle->getChassisWorldTransform().getOrigin());
     modelView.lookAt(
-      vec3(50, 50, 50),
-      vec3(0,0,0),
+      center + vec3(10, 10, 10),
+      center,
       vec3(0,1,0));
-    proj.ortho(-10, 10, -10, 10, -10, 100);
-
-    const GLfloat bias[16] = {
-      0.5, 0.0, 0.0, 0.0,
-      0.0, 0.5, 0.0, 0.0,
-      0.0, 0.0, 0.5, 0.0,
-      0.5, 0.5, 0.5, 1.0};
+    proj.ortho(-5, 5, -5, 5, -10, 100);
 
     mat4 modelViewTop = modelView;
 
@@ -1052,8 +1086,8 @@ void App::paintGL() {
     glPopAttrib();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glDisable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    //glDisable(GL_CULL_FACE);
+    //glCullFace(GL_BACK);
   }
 
   if (blurEnabled) {
@@ -1111,7 +1145,7 @@ void App::paintGL() {
     renderer->drawMesh(wheel);
   }
 
-  scene->draw(delta, proj, modelView);
+  scene->draw(delta, proj, modelView, shadowDepthTexture, vehicle);
 
   /*renderer->setShader(terrainShader);
   renderer->setTexture("grass", grass, 0);
@@ -1342,6 +1376,7 @@ void App::keyPressEvent(QKeyEvent* event) {
       chassis->setCenterOfMassTransform(transform);
       chassis->setLinearVelocity(btVector3(0,0,0));
       chassis->setAngularVelocity(btVector3(0,0,0));
+      vehicleSteering = 0;
       break;
       }
   }

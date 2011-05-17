@@ -49,7 +49,7 @@ public:
   BlenderScene(const char* fileName, btDynamicsWorld* world, Renderer* renderer);
   ~BlenderScene();
 
-  void draw(qint64 delta, const mat4& proj, const mat4& modelView);
+  void draw(qint64 delta, const mat4& proj, const mat4& modelView, GLuint depthTexture, btRaycastVehicle* vehicle);
 
 private:
   btBulletWorldImporter* importer;
