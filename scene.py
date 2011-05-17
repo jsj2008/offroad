@@ -37,9 +37,14 @@ def export_mesh(obj, scene_path, mesh_name):
 
   mesh = obj.data
   vertices = []
+  flat = False
+  if 'flat' in obj.game.properties and obj.game.properties.value:
+    flat = True
   n_uvs = len(mesh.uv_textures)
   for face_index, face in enumerate(mesh.faces):
     vertex = [mesh.vertices[face.vertices[0]].co, mesh.vertices[face.vertices[0]].normal]
+    if flat:
+      vertex[1] = face.normal
     for u in range(n_uvs):
       uv_data = mesh.uv_textures[u].data
       coords = uv_data[face_index]
@@ -47,6 +52,8 @@ def export_mesh(obj, scene_path, mesh_name):
     vertices.append(vertex)
 
     vertex = [mesh.vertices[face.vertices[1]].co, mesh.vertices[face.vertices[1]].normal]
+    if flat:
+      vertex[1] = face.normal
     for u in range(n_uvs):
       uv_data = mesh.uv_textures[u].data
       coords = uv_data[face_index]
@@ -54,6 +61,8 @@ def export_mesh(obj, scene_path, mesh_name):
     vertices.append(vertex)
 
     vertex = [mesh.vertices[face.vertices[2]].co, mesh.vertices[face.vertices[2]].normal]
+    if flat:
+      vertex[1] = face.normal
     for u in range(n_uvs):
       uv_data = mesh.uv_textures[u].data
       coords = uv_data[face_index]
@@ -112,7 +121,9 @@ class SceneExporter(bpy.types.Operator, ExportHelper):
           continue
         slots = obj.active_material.texture_slots
         n_slots = len(list(filter(lambda s: s != None, slots)))
-        shader = "color.shader" if n_slots == 1 else "color-ambient.shader" # TODO: more
+        shader = 'color.shader'
+        if 'shader' in obj.game.properties:
+          shader = obj.game.properties['shader'].value
         mesh = obj.name.split('.')[0] + '.mesh'
 
         f.write('<object ')

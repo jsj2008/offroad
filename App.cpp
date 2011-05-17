@@ -521,6 +521,9 @@ App::App(const QGLFormat& format, ConfigurationWindow* configWin) : QGLWidget(fo
   engineForce = breakingForce = vehicleSteering = 0;
   mouseFree = true;
   stipple = true;
+  blurEnabled = true;
+  drawAabb = false;
+  shadows = true;
   camDir = btVector3(0,1,0);
 }
 
@@ -529,6 +532,8 @@ App::~App() {
 
   glDeleteFramebuffersEXT(1, &fbo);
   glDeleteRenderbuffersEXT(1, &depthBuffer);
+
+  glDeleteFramebuffersEXT(1, &shadowFbo);
 
   if (scene)
     delete scene;
@@ -612,8 +617,8 @@ void App::initializeGL() {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_MULTISAMPLE);
 
-  rttWidth = 2048;
-  rttHeight = 2048;
+  rttWidth = 1024;
+  rttHeight = 1024;
 
   glGenFramebuffers(1, &fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -635,7 +640,7 @@ void App::initializeGL() {
 
   glGenTextures(1, &depthTexture);
   glBindTexture(GL_TEXTURE_2D, depthTexture);
-/*  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -644,7 +649,7 @@ void App::initializeGL() {
   glBindTexture(GL_TEXTURE_2D, 0);
 
   // TODO: this is just wrong
-  glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depthTexture, 0);*/
+  glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depthTexture, 0);
 
   GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
@@ -653,6 +658,37 @@ void App::initializeGL() {
     this->parentWidget()->close();
     return;
   }
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  // Build another FBO for shadows.
+  shadowMapWidth = 1024;
+  shadowMapHeight = 1024;
+	
+  glGenTextures(1, &shadowDepthTexture);
+  glBindTexture(GL_TEXTURE_2D, shadowDepthTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowMapWidth, shadowMapHeight, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  glGenFramebuffers(1, &shadowFbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, shadowFbo);
+
+  glDrawBuffer(GL_NONE);
+  glReadBuffer(GL_NONE);
+ 
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowDepthTexture, 0);
+
+  status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+  if (GL_FRAMEBUFFER_COMPLETE != status) {
+    std::cout << "Error while creating shadow FBO!" << std::endl;
+    this->parentWidget()->close();
+    return;
+  }
+
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   std::cout << "Init complete!" << std::endl;
@@ -673,7 +709,7 @@ void App::setupPhysics() {
   btVector3 wheelDirection(0,0,-1);
   btVector3 wheelAxle(1,0,0);
   btScalar suspensionRestLength(0.8);
-  float vehicleMass = 1500;
+  float vehicleMass = 1200;
 
   collisionConfiguration = new btDefaultCollisionConfiguration();
   dispatcher = new btCollisionDispatcher(collisionConfiguration);
@@ -962,16 +998,74 @@ void App::updatePhysics(qint64 delta) {
 void App::paintGL() {
   qint64 delta = timer->restart();
   updatePhysics(delta);
-/*
-  glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-  glPushAttrib(GL_VIEWPORT_BIT);
-  glViewport(0,0, rttWidth, rttHeight);*/
+
+  if (shadows) {
+    /*glBindFramebuffer(GL_FRAMEBUFFER, shadowFbo);
+    glUseProgramObject(0);
+    glPushAttrib(GL_VIEWPORT_BIT);
+    glViewport(0,0, shadowMapWidth, shadowMapHeight);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+
+    mat4 modelView;
+    mat4 proj;
+    modelView.lookAt(
+      vec3(50, 50, 50),
+      vec3(0,0,0),
+      vec3(0,1,0));
+    proj.ortho(-10, 10, -10, 10, -10, 100);
+
+    const GLfloat bias[16] = {
+      0.5, 0.0, 0.0, 0.0,
+      0.0, 0.5, 0.0, 0.0,
+      0.0, 0.0, 0.5, 0.0,
+      0.5, 0.5, 0.5, 1.0};
+
+    mat4 modelViewTop = modelView;
+
+    renderer->setShader(plain);
+
+    btScalar matrix[16];
+    vehicle->getChassisWorldTransform().getOpenGLMatrix(matrix);
+    modelViewTop *= toMat4(matrix);
+    modelViewTop.rotate(90, vec3(1,0,0));
+    modelViewTop.rotate(180, vec3(0,1,0));
+    modelViewTop.scale(0.35, 0.35, 0.35);
+    renderer->setUniformMat4("proj", proj);
+    renderer->setUniformMat4("modelView", modelViewTop);
+    renderer->drawMesh(truck);
+
+    for (int i = 0; i < vehicle->getNumWheels(); ++i) {
+      vehicle->updateWheelTransform(i, true);
+      vehicle->getWheelInfo(i).m_worldTransform.getOpenGLMatrix(matrix);
+      modelViewTop = modelView;
+      modelViewTop *= toMat4(matrix);
+      modelViewTop.scale(0.4, 0.3, 0.3);
+      renderer->setUniformMat4("proj", proj);
+      renderer->setUniformMat4("modelView", modelViewTop);
+      renderer->drawMesh(wheel);
+    }
+
+    glPopAttrib();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glDisable(GL_CULL_FACE);
+    glCullFace(GL_BACK);*/
+  }
+
+  if (blurEnabled) {
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glPushAttrib(GL_VIEWPORT_BIT);
+    glViewport(0,0, rttWidth, rttHeight);
+  }
 
   glEnable(GL_DEPTH_TEST);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   mat4 modelView;
   mat4 proj;
-  proj.perspective(75., float(width()) / height(), 0.1, 1000.);
+  proj.perspective(75., float(width()) / height(), 0.5, 700.);
 
   if (vehicleCam) {
     btVector3 forward = vehicle->getForwardVector();
@@ -1100,7 +1194,43 @@ void App::paintGL() {
   renderer->drawMesh(skyDome);*/
   //glPopMatrix();
 
+  if (blurEnabled) {
+    glPopAttrib();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glClear(GL_COLOR_BUFFER_BIT);
+    glViewport(0,0, this->width(), this->height());
+    glMatrixMode(GL_PROJECTION); // TODO: this must also go
+    glLoadIdentity();
+    glOrtho(-1,1,-1,1,-1,1);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    //glDepthMask(GL_FALSE);
+    glDisable(GL_DEPTH_TEST);
+    renderer->setShader(blur);
+    renderer->setUniformMat4("previousModelView", previousModelView);
+    renderer->setUniformMat4("proj", proj);
+    renderer->setUniformMat4("modelViewInverse", modelView.inverted());
+    renderer->setUniformMat4("projInverse", proj.inverted());
+    glActiveTexture(GL_TEXTURE0 + 0);
+    glBindTexture(GL_TEXTURE_2D, colorBuffer);
+    renderer->setUniform1i("color", 0);
+    glActiveTexture(GL_TEXTURE0 + 1);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    renderer->setUniform1i("depth", 1);
+
+    glBegin(GL_QUADS);
+    glVertex2f(-1,1);
+    glVertex2f(1,1);
+    glVertex2f(1,-1);
+    glVertex2f(-1,-1);
+    glEnd();
+  }
+
   renderer->disableShaders();
+  glEnable(GL_DEPTH_TEST);
+  //glDepthMask(GL_FALSE);
 
   if (drawDebugInfo) {
     // TODO: convert this crap to shader based.
@@ -1112,7 +1242,10 @@ void App::paintGL() {
 
     DebugDrawer* dd = static_cast<DebugDrawer*>(dynamicsWorld->getDebugDrawer());
     dd->setModelViewProj(modelView, proj);
-    dd->setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawAabb);
+    if (drawAabb)
+      dd->setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawAabb);
+    else
+      dd->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
     dynamicsWorld->debugDrawWorld();
 
     if (stipple) {
@@ -1122,38 +1255,7 @@ void App::paintGL() {
       dynamicsWorld->debugDrawWorld();
     }
   }
-/*
-  glPopAttrib();
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-  glClear(GL_COLOR_BUFFER_BIT);
-  glViewport(0,0, this->width(), this->height());
-  glMatrixMode(GL_PROJECTION); // TODO: this must also go
-  glLoadIdentity();
-  glOrtho(-1,1,-1,1,-1,1);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-
-  glDisable(GL_DEPTH_TEST);
-  renderer->setShader(blur);
-  renderer->setUniformMat4("previousModelView", previousModelView);
-  renderer->setUniformMat4("proj", proj);
-  renderer->setUniformMat4("modelViewInverse", modelView.inverted());
-  renderer->setUniformMat4("projInverse", proj.inverted());
-  glActiveTexture(GL_TEXTURE0 + 0);
-  glBindTexture(GL_TEXTURE_2D, colorBuffer);
-  renderer->setUniform1i("color", 0);
-  glActiveTexture(GL_TEXTURE0 + 1);
-  glBindTexture(GL_TEXTURE_2D, depthTexture);
-  renderer->setUniform1i("depth", 1);
-
-  glBegin(GL_QUADS);
-  glVertex2f(-1,1);
-  glVertex2f(1,1);
-  glVertex2f(1,-1);
-  glVertex2f(-1,-1);
-  glEnd();
-*/
   previousModelView = modelView;
 
   update();
@@ -1178,7 +1280,7 @@ void App::keyPressEvent(QKeyEvent* event) {
       this->setCursor(Qt::ArrowCursor);
       mouseFree = false;
       break;
-    case Qt::Key_B:
+    case Qt::Key_G:
       drawDebugInfo = !drawDebugInfo;
       break;
     case Qt::Key_Up:
@@ -1196,8 +1298,17 @@ void App::keyPressEvent(QKeyEvent* event) {
     case Qt::Key_V:
       vehicleCam = !vehicleCam;
       break;
-    case Qt::Key_O:
+    case Qt::Key_H:
       stipple = !stipple;
+      break;
+    case Qt::Key_B:
+      blurEnabled = !blurEnabled;
+      break;
+    case Qt::Key_J:
+      drawAabb = !drawAabb;
+      break;
+    case Qt::Key_L:
+      shadows = !shadows;
       break;
 
     case Qt::Key_Backspace: { // HAHA: jump case label error is just weird even for C++

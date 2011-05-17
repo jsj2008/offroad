@@ -120,7 +120,14 @@ private:
 
   int rttWidth, rttHeight;
   Shader* blur;
+  bool blurEnabled;
   mat4 previousModelView;
+
+  GLuint shadowFbo;
+  GLuint shadowDepthTexture;
+  bool shadows;
+  int shadowMapWidth;
+  int shadowMapHeight;
 
   BlenderScene* scene;
   FirstPersonCamera* cam;
@@ -148,6 +155,7 @@ private:
   DebugDrawer* debugDrawer;
   bool drawDebugInfo;
   bool stipple;
+  bool drawAabb;
 
   bool accelerating, breaking, steeringLeft, steeringRight;
   float engineForce, breakingForce, vehicleSteering;
