@@ -118,8 +118,9 @@ class SceneExporter(bpy.types.Operator, ExportHelper):
         rot = obj.rotation_quaternion
         if obj.active_material == None:
           print(obj.name + ' does not have a material assigned!')
-          continue
-        slots = obj.active_material.texture_slots
+          slots = []
+        else:
+          slots = obj.active_material.texture_slots
         n_slots = len(list(filter(lambda s: s != None, slots)))
         shader = 'color.shader'
         if 'shader' in obj.game.properties:
@@ -133,6 +134,9 @@ class SceneExporter(bpy.types.Operator, ExportHelper):
         f.write('>\n')
         f.write('  <position x="%f" y="%f" z="%f" />\n' % (x,y,z))
         f.write('  <rotation x="%f" y="%f" z="%f" w="%f" />\n' % (rot.x, rot.y, rot.z, rot.w))
+        if 'color' in obj.game.properties:
+          color = list(map(float, obj.game.properties['color'].value.split()))
+          f.write('  <color r="%f" g="%f" b="%f" />\n' % (color[0], color[1], color[2]))
         f.write('</object>\n')
         # export appropriate mesh
         if mesh not in exported_meshes:
