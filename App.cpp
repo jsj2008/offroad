@@ -598,6 +598,7 @@ void App::initializeGL() {
     skyDome = renderer->addMesh("content/sky-dome.mesh");
     scattering = renderer->addShader("content/scattering.shader");
     blur = renderer->addShader("content/blur.shader");
+    plain = renderer->addShader("content/plain.shader");
 
     this->setupPhysics();
 
@@ -978,14 +979,16 @@ void App::updatePhysics(qint64 delta) {
   vehicle->setBrake(breakingForce, 2);
   vehicle->setBrake(breakingForce, 3);
 
+  float speed = vehicle->getCurrentSpeedKmHour();
+
   if (steeringLeft)
-    vehicleSteering += 0.004 * delta;
+    vehicleSteering += 0.004 * delta / (speed*0.05+1);
 
   if (steeringRight)
-    vehicleSteering -= 0.004 * delta;
+    vehicleSteering -= 0.004 * delta / (speed*0.05+1);
 
   // Gravitate steering to 0 based on the distance traveled.
-  float distanceTraveled = vehicle->getCurrentSpeedKmHour() * delta * 0.00001;
+  float distanceTraveled = speed * delta * 0.00001;
   vehicleSteering += (vehicleSteering > 0 ? -1:1) * distanceTraveled;
   vehicleSteering = clamp(vehicleSteering, -maxSteering, maxSteering);
 
@@ -1000,8 +1003,7 @@ void App::paintGL() {
   updatePhysics(delta);
 
   if (shadows) {
-    /*glBindFramebuffer(GL_FRAMEBUFFER, shadowFbo);
-    glUseProgramObject(0);
+    glBindFramebuffer(GL_FRAMEBUFFER, shadowFbo);
     glPushAttrib(GL_VIEWPORT_BIT);
     glViewport(0,0, shadowMapWidth, shadowMapHeight);
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -1043,7 +1045,6 @@ void App::paintGL() {
       modelViewTop = modelView;
       modelViewTop *= toMat4(matrix);
       modelViewTop.scale(0.4, 0.3, 0.3);
-      renderer->setUniformMat4("proj", proj);
       renderer->setUniformMat4("modelView", modelViewTop);
       renderer->drawMesh(wheel);
     }
@@ -1052,7 +1053,7 @@ void App::paintGL() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glDisable(GL_CULL_FACE);
-    glCullFace(GL_BACK);*/
+    glCullFace(GL_BACK);
   }
 
   if (blurEnabled) {
@@ -1098,7 +1099,9 @@ void App::paintGL() {
   renderer->setTexture("texture", wheelTexture, 0);
 
   for (int i = 0; i < vehicle->getNumWheels(); ++i) {
-    vehicle->updateWheelTransform(i, true);
+    if (!shadows) {
+      vehicle->updateWheelTransform(i, true);
+    }
     vehicle->getWheelInfo(i).m_worldTransform.getOpenGLMatrix(matrix);
     modelViewTop = modelView;
     modelViewTop *= toMat4(matrix);
@@ -1319,6 +1322,7 @@ void App::keyPressEvent(QKeyEvent* event) {
       chassis->setCenterOfMassTransform(transform);
       chassis->setLinearVelocity(btVector3(0,0,0));
       chassis->setAngularVelocity(btVector3(0,0,0));
+      vehicleSteering = 0;
       break;
       }
 

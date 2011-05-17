@@ -128,6 +128,7 @@ private:
   bool shadows;
   int shadowMapWidth;
   int shadowMapHeight;
+  Shader* plain;
 
   BlenderScene* scene;
   FirstPersonCamera* cam;
