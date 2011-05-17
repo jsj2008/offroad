@@ -1007,8 +1007,16 @@ void App::updatePhysics(qint64 delta) {
   else
     engineForce = 0;
 
-  if (breaking)
-    breakingForce = 300;
+  float speed = vehicle->getCurrentSpeedKmHour();
+
+  if (breaking) {
+    if (speed < 0.1) {
+      engineForce = -500;
+      breakingForce = 0;
+    }
+    else
+      breakingForce = 300;
+  }
   else
     breakingForce = 0;
 
@@ -1016,8 +1024,6 @@ void App::updatePhysics(qint64 delta) {
   vehicle->applyEngineForce(engineForce, 3);
   vehicle->setBrake(breakingForce, 2);
   vehicle->setBrake(breakingForce, 3);
-
-  float speed = vehicle->getCurrentSpeedKmHour();
 
   if (steeringLeft)
     vehicleSteering += 0.004 * delta / (speed*0.05+1);
