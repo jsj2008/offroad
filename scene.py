@@ -38,7 +38,7 @@ def export_mesh(obj, scene_path, mesh_name):
   mesh = obj.data
   vertices = []
   flat = False
-  if 'flat' in obj.game.properties and obj.game.properties.value:
+  if 'flat' in obj.game.properties and obj.game.properties['flat'].value:
     flat = True
   n_uvs = len(mesh.uv_textures)
   for face_index, face in enumerate(mesh.faces):
