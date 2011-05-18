@@ -527,7 +527,7 @@ App::App(const QGLFormat& format, ConfigurationWindow* configWin) : QGLWidget(fo
   engineForce = breakingForce = vehicleSteering = 0;
   mouseFree = true;
   stipple = true;
-  blurEnabled = true;
+  blurEnabled = false;
   drawAabb = false;
   shadows = true;
   camDir = btVector3(0,1,0);
