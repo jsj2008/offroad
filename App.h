@@ -90,6 +90,9 @@ public:
   App(const QGLFormat& format, ConfigurationWindow* configWin);
   ~App();
 
+private slots:
+  void updateFps();
+
 private:
   void initializeGL();
   void paintGL();
@@ -102,6 +105,10 @@ private:
   void setupPhysics();
   void updatePhysics(qint64 delta);
   void cleanUpPhysics();
+
+  int framesDrawn;
+  QString fps;
+  QTimer* fpsTimer;
 
   ConfigurationWindow* configWin;
   Renderer* renderer;

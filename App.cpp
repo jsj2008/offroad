@@ -531,6 +531,8 @@ App::App(const QGLFormat& format, ConfigurationWindow* configWin) : QGLWidget(fo
   drawAabb = false;
   shadows = true;
   camDir = btVector3(0,1,0);
+  framesDrawn = 0;
+  fps = "";
 }
 
 App::~App() {
@@ -552,6 +554,9 @@ App::~App() {
 
   if (timer)
     delete timer;
+
+  if (fpsTimer)
+    delete fpsTimer;
 }
 
 void App::initializeGL() {
@@ -561,6 +566,10 @@ void App::initializeGL() {
   this->setCursor(Qt::BlankCursor);
   timer = new QElapsedTimer();
   timer->start();
+
+  fpsTimer = new QTimer(this);
+  connect(fpsTimer, SIGNAL(timeout()), this, SLOT(updateFps()));
+  fpsTimer->start(1000);
 
   GLenum err = glewInit();
   if (GLEW_OK != err) {
@@ -1044,6 +1053,11 @@ void App::updatePhysics(qint64 delta) {
   dynamicsWorld->stepSimulation(delta/700.f, 30);
 }
 
+void App::updateFps() {
+  fps = QString("%1").arg(framesDrawn / 1.);
+  framesDrawn = 0;
+}
+
 void App::paintGL() {
   qint64 delta = timer->restart();
   updatePhysics(delta);
@@ -1270,19 +1284,14 @@ void App::paintGL() {
 
   previousModelView = modelView;
   
-  glPushAttrib(GL_VIEWPORT_BIT);
-  glViewport(0,0, width(), height());
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glOrtho(-0.5, +0.5, -0.5, +0.5, 4.0, 15.0);
-  glMatrixMode(GL_MODELVIEW);
-
-  glDisable(GL_DEPTH_TEST);
   glActiveTexture(GL_TEXTURE0);
 
-  renderer->disableShaders();
-  renderText(50,50,"This is text");
-  glPopAttrib();
+  QFont font("Star Trek Future");
+  font.setPointSize(42);
+  glColor3f(0,0,0);
+  renderText(50,50, "Fps: " + fps, font);
+
+  framesDrawn++;
 
   update();
 }
