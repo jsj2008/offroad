@@ -454,6 +454,8 @@ public:
     }
 
     glBindVertexArray(0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     Mesh* mesh = new Mesh;
     mesh->version = version;
@@ -1051,6 +1053,7 @@ void App::paintGL() {
     glPushAttrib(GL_VIEWPORT_BIT);
     glViewport(0,0, shadowMapWidth, shadowMapHeight);
     glClear(GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
     mat4 modelView;
@@ -1147,35 +1150,6 @@ void App::paintGL() {
   }
 
   scene->draw(delta, proj, modelView, shadowDepthTexture, vehicle);
-
-  /*renderer->setShader(terrainShader);
-  renderer->setTexture("grass", grass, 0);
-  renderer->setVertexBuffer(terrainVB);
-  renderer->setIndexBuffer(terrainIB);
-  int vertexSize = 8*4;
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vertexSize, BUFFER_OFFSET(0));
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, vertexSize, BUFFER_OFFSET(3*4));
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, vertexSize, BUFFER_OFFSET(6*4));
-  glEnableVertexAttribArray(2);
-
-  glPushMatrix();
-  glScalef(-1,1,1);
-  glRotatef(270, 0,1,0);
-  glTranslatef(-heightfieldWidth/2.f+0.5, yTrans, -heightfieldHeight/2.f+0.5);
-  glDrawElements(GL_TRIANGLES, (heightfieldWidth-1)*(heightfieldHeight-1)*6, GL_UNSIGNED_INT, 0);
-  glPopMatrix();
-
-  btTransform transform;
-  barrelBody->getMotionState()->getWorldTransform(transform);
-  transform.getOpenGLMatrix(matrix);
-  glPushMatrix();
-  glMultMatrixf(matrix);
-  renderer->setShader(wheelShader);
-  renderer->setTexture("wheel", barrelTexture, 0);
-  renderer->drawMesh(barrel);
-  glPopMatrix();*/
 
 /*
   renderer->setShader(scattering);
@@ -1295,6 +1269,20 @@ void App::paintGL() {
   }
 
   previousModelView = modelView;
+  
+  glPushAttrib(GL_VIEWPORT_BIT);
+  glViewport(0,0, width(), height());
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glOrtho(-0.5, +0.5, -0.5, +0.5, 4.0, 15.0);
+  glMatrixMode(GL_MODELVIEW);
+
+  glDisable(GL_DEPTH_TEST);
+  glActiveTexture(GL_TEXTURE0);
+
+  renderer->disableShaders();
+  renderText(50,50,"This is text");
+  glPopAttrib();
 
   update();
 }
