@@ -540,6 +540,7 @@ App::App(const QGLFormat& format, ConfigurationWindow* configWin) : QGLWidget(fo
   camDir = btVector3(0,1,0);
   framesDrawn = 0;
   fps = "";
+  fov = 75;
 }
 
 App::~App() {
@@ -1027,6 +1028,8 @@ void App::updatePhysics(qint64 delta) {
     engineForce = 0;
 
   float speed = vehicle->getCurrentSpeedKmHour();
+  float fovGoal = 75 + speed / 2;
+  fov += (fovGoal - fov)*0.1;
 
   if (breaking) {
     if (speed < 0.1) {
@@ -1126,7 +1129,7 @@ void App::paintGL() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   mat4 modelView;
   mat4 proj;
-  proj.perspective(75., float(width()) / height(), 0.5, 700.);
+  proj.perspective(fov, float(width()) / height(), 0.5, 700.);
 
   if (vehicleCam) {
     btVector3 forward = vehicle->getForwardVector();

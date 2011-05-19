@@ -139,6 +139,7 @@ private:
 
   BlenderScene* scene;
   FirstPersonCamera* cam;
+  float fov;
   QElapsedTimer* timer;
 
   bool mouseFree;
