@@ -448,9 +448,13 @@ public:
       glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, vertexSize, BUFFER_OFFSET(6*4));
       glEnableVertexAttribArray(2);
     }
-    if (vertexSize == 40) {
+    if (vertexSize >= 40) {
       glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, vertexSize, BUFFER_OFFSET(8*4));
       glEnableVertexAttribArray(3);
+    }
+    if (vertexSize >= 48) {
+      glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, vertexSize, BUFFER_OFFSET(10*4));
+      glEnableVertexAttribArray(4);
     }
 
     glBindVertexArray(0);
@@ -677,8 +681,8 @@ void App::initializeGL() {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   // Build another FBO for shadows.
-  shadowMapWidth = 2048;
-  shadowMapHeight = 2048;
+  shadowMapWidth = 1024;
+  shadowMapHeight = 1024;
 	
   glGenTextures(1, &shadowDepthTexture);
   glBindTexture(GL_TEXTURE_2D, shadowDepthTexture);
@@ -736,8 +740,9 @@ void App::setupPhysics() {
   dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, constraintSolver, collisionConfiguration);
   dynamicsWorld->setGravity(btVector3(0,0,-10));
 
-  btCollisionShape *chassisShape = new btBoxShape(btVector3(0.8, 1.8, 0.7));
-  btCompoundShape *compound = new btCompoundShape();
+  //btCollisionShape *chassisShape = new btBoxShape(btVector3(0.8, 1.8, 0.7));
+  btCollisionShape* chassisShape = new btCapsuleShape(0.7, 2);
+  btCompoundShape* compound = new btCompoundShape();
   btTransform localTrans;
   localTrans.setIdentity();
 
@@ -936,7 +941,7 @@ void BlenderScene::draw(qint64 delta,
 
   mat4 lightModelView;
   mat4 lightProj;
-  lightProj.ortho(-5, 5, -5, 5, -10, 100);
+  lightProj.ortho(-3, 3, -3, 3, -10, 100);
 
   btVector3 center = vehicle->getChassisWorldTransform().getOrigin();
   vec3 cen = vec3(center.x(), center.y(), center.z());
@@ -991,9 +996,9 @@ void BlenderScene::draw(qint64 delta,
     }
 
     // TODO: this overrides second unit, make this more general
-    glActiveTexture(GL_TEXTURE0 + 1);
+    glActiveTexture(GL_TEXTURE0 + 5);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
-    renderer->setUniform1i("depth", 1);
+    renderer->setUniform1i("depth", 5);
     renderer->setUniform4fv("bias", bias);
     renderer->setUniformMat4("shadowProj", lightProj);
     renderer->setUniformMat4("shadowModelView", lightModelView);
@@ -1077,7 +1082,7 @@ void App::paintGL() {
       center + vec3(10, 10, 10),
       center,
       vec3(0,1,0));
-    proj.ortho(-5, 5, -5, 5, -10, 100);
+    proj.ortho(-3, 3, -3, 3, -10, 100);
 
     mat4 modelViewTop = modelView;
 
@@ -1286,10 +1291,10 @@ void App::paintGL() {
   
   glActiveTexture(GL_TEXTURE0);
 
-  QFont font("Star Trek Future");
+  QFont font("Chicken Butt");
   font.setPointSize(42);
   glColor3f(0,0,0);
-  renderText(50,50, "Fps: " + fps, font);
+  renderText(50,50, "The Fps: " + fps, font);
 
   framesDrawn++;
 
