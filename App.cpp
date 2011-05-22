@@ -1131,12 +1131,13 @@ void App::paintGL() {
   mat4 proj;
   proj.perspective(fov, float(width()) / height(), 0.5, 700.);
 
+  btVector3 chassisPos = vehicle->getChassisWorldTransform().getOrigin();
+
   if (vehicleCam) {
     btVector3 forward = vehicle->getForwardVector();
     camDir = camDir.lerp(forward, delta*0.001);
-    btVector3 origin = vehicle->getChassisWorldTransform().getOrigin();
-    btVector3 pos = origin - 4*camDir + btVector3(0,0,2.5);
-    btVector3 aboveVehicle = origin + btVector3(0,0,0.5);
+    btVector3 pos = chassisPos - 4*camDir + btVector3(0,0,2.5);
+    btVector3 aboveVehicle = chassisPos + btVector3(0,0,0.5);
     modelView.lookAt(
       vec3(pos.x(), pos.y(), pos.z()),
       vec3(aboveVehicle.x(), aboveVehicle.y(), aboveVehicle.z()),
@@ -1516,10 +1517,12 @@ int main(int argc, char** args) {
   QApplication qapp(argc, args);
   QGLFormat format;
   format.setSampleBuffers(true);
+  format.setSamples(2);
+  std::cout << "Using " << format.samples() << " samples." << std::endl;
   ConfigurationWindow win;
   win.resize(600, 200);
   App app(format, &win);
-  app.resize(800, 800);
+  app.resize(1024, 768);
   win.show();
   app.show();
   return qapp.exec();
