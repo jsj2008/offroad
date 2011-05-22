@@ -1,5 +1,79 @@
 <scene>
-<object name="skybox" shader="color.shader" mesh="skybox.mesh" texture0="SkyBox-Clouds-Wispy-MidMorning.png">
+<object name="hrosc.011" shader="car.shader" mesh="hrosc.mesh" texture0="hrosc-ambient.png">
+  <position x="-29.950420" y="-36.796001" z="1.272014" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="hrosc.010" shader="car.shader" mesh="hrosc.mesh" texture0="hrosc-ambient.png">
+  <position x="-31.273680" y="-36.902855" z="1.272014" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="hrosc.009" shader="car.shader" mesh="hrosc.mesh" texture0="hrosc-ambient.png">
+  <position x="-32.601398" y="-36.902855" z="1.272014" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="hrosc.008" shader="car.shader" mesh="hrosc.mesh" texture0="hrosc-ambient.png">
+  <position x="-33.953102" y="-36.902855" z="1.272014" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="hrosc.007" shader="car.shader" mesh="hrosc.mesh" texture0="hrosc-ambient.png">
+  <position x="-35.289932" y="-36.902855" z="1.272014" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="hrosc.006" shader="car.shader" mesh="hrosc.mesh" texture0="hrosc-ambient.png">
+  <position x="-35.289932" y="-33.889336" z="1.272014" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="hrosc.004" shader="car.shader" mesh="hrosc.mesh" texture0="hrosc-ambient.png">
+  <position x="-33.953102" y="-33.889336" z="1.272014" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="hrosc.003" shader="car.shader" mesh="hrosc.mesh" texture0="hrosc-ambient.png">
+  <position x="-32.601398" y="-33.889336" z="1.272014" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="hrosc.005" shader="car.shader" mesh="hrosc.mesh" texture0="hrosc-ambient.png">
+  <position x="-31.273680" y="-33.889336" z="1.272014" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="hrosc.002" shader="car.shader" mesh="hrosc.mesh" texture0="hrosc-ambient.png">
+  <position x="-29.950420" y="-33.782482" z="1.272014" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="bump-before" shader="color.shader" mesh="bump-before.mesh" texture0="sand-dirt.jpg">
+  <position x="-27.254566" y="-34.217564" z="0.901004" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="arrow.006" shader="arrow.shader" mesh="arrow.mesh">
+  <position x="-16.095501" y="-33.255386" z="2.083602" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+  <color r="0.800000" g="0.800000" b="0.500000" />
+</object>
+<object name="arrow.005" shader="arrow.shader" mesh="arrow.mesh">
+  <position x="0.837295" y="-33.255386" z="2.083602" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+  <color r="0.800000" g="0.800000" b="0.500000" />
+</object>
+<object name="arrow.004" shader="arrow.shader" mesh="arrow.mesh">
+  <position x="24.268631" y="-18.985544" z="2.083602" />
+  <rotation x="-0.336087" y="-0.193918" z="0.460608" w="0.798299" />
+  <color r="0.800000" g="0.800000" b="0.500000" />
+</object>
+<object name="arrow.003" shader="arrow.shader" mesh="arrow.mesh">
+  <position x="-62.711735" y="-11.111206" z="2.083602" />
+  <rotation x="0.000000" y="0.000000" z="0.999485" w="0.032108" />
+  <color r="0.800000" g="0.800000" b="0.500000" />
+</object>
+<object name="arrow.002" shader="arrow.shader" mesh="arrow.mesh">
+  <position x="-90.090057" y="-2.094652" z="2.083602" />
+  <rotation x="0.040487" y="0.339988" z="0.932966" w="0.111100" />
+  <color r="0.800000" g="0.800000" b="0.500000" />
+</object>
+<object name="arrow.001" shader="arrow.shader" mesh="arrow.mesh">
+  <position x="-87.173523" y="8.723473" z="2.083602" />
+  <rotation x="0.305287" y="0.165825" z="0.447577" w="0.824000" />
+  <color r="0.800000" g="0.800000" b="0.500000" />
+</object>
+<object name="skybox" shader="color-no-light.shader" mesh="skybox.mesh" texture0="SkyBox-Clouds-Wispy-MidMorning.png">
   <position x="0.000000" y="0.000000" z="0.000000" />
   <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
@@ -39,19 +113,19 @@
   <position x="0.000000" y="2.975406" z="1.002244" />
   <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="concrete.003" shader="color.shader" mesh="concrete.mesh" texture0="concrete-new.jpg">
+<object name="concrete.003" shader="color-shadow.shader" mesh="concrete.mesh" texture0="concrete-new.jpg">
   <position x="-5.223350" y="6.684233" z="0.882942" />
   <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="concrete.002" shader="color.shader" mesh="concrete.mesh" texture0="concrete-new.jpg">
+<object name="concrete.002" shader="color-shadow.shader" mesh="concrete.mesh" texture0="concrete-new.jpg">
   <position x="-5.223350" y="4.984233" z="0.882942" />
   <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="concrete.001" shader="color.shader" mesh="concrete.mesh" texture0="concrete-new.jpg">
+<object name="concrete.001" shader="color-shadow.shader" mesh="concrete.mesh" texture0="concrete-new.jpg">
   <position x="-5.223350" y="3.284233" z="0.882942" />
   <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="concrete" shader="color.shader" mesh="concrete.mesh" texture0="concrete-new.jpg">
+<object name="concrete" shader="color-shadow.shader" mesh="concrete.mesh" texture0="concrete-new.jpg">
   <position x="-5.223350" y="1.584233" z="0.882942" />
   <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
@@ -59,8 +133,56 @@
   <position x="-2.503114" y="-20.004887" z="1.908566" />
   <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="ground" shader="color.shader" mesh="ground.mesh" texture0="sand-dirt.jpg">
+<object name="ground" shader="ground.shader" mesh="ground.mesh" texture0="sand-dirt.jpg" texture1="tracks.png" texture2="ao-ground.png">
   <position x="0.000000" y="0.000000" z="0.000000" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="hrosc.001" shader="car.shader" mesh="hrosc.mesh" texture0="hrosc-ambient.png">
+  <position x="5.096181" y="-2.402694" z="1.368736" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="Tank.004" shader="color.shader" mesh="Tank.mesh" texture0="air-tank.jpg">
+  <position x="3.766103" y="-5.273429" z="1.225115" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="Tank.003" shader="color.shader" mesh="Tank.mesh" texture0="air-tank.jpg">
+  <position x="3.258403" y="-5.896052" z="1.345133" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="Tank.002" shader="color.shader" mesh="Tank.mesh" texture0="air-tank.jpg">
+  <position x="3.203059" y="-6.064429" z="1.126155" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="Tank.001" shader="color.shader" mesh="Tank.mesh" texture0="air-tank.jpg">
+  <position x="3.626561" y="-5.497194" z="1.152478" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="Tank" shader="color.shader" mesh="Tank.mesh" texture0="air-tank.jpg">
+  <position x="3.411546" y="-5.780764" z="1.153030" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="classic" shader="carb.shader" mesh="classic.mesh" texture0="classic-ambient.png">
+  <position x="1.448200" y="8.438224" z="1.686727" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="barrel.004" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
+  <position x="5.616252" y="-4.549945" z="1.356767" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="barrel.003" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
+  <position x="4.896426" y="-4.549945" z="1.356767" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="barrel.001" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
+  <position x="3.528757" y="-4.549945" z="1.356767" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="hrosc" shader="car.shader" mesh="hrosc.mesh" texture0="hrosc-ambient.png">
+  <position x="7.801228" y="-4.188062" z="1.272014" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="barrel" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
+  <position x="2.934901" y="-4.549945" z="1.356767" />
   <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
 </scene>

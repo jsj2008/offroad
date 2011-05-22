@@ -12,16 +12,16 @@
   out vec2 pcolor;
   out vec4 shadowCoord;
   uniform mat4 modelView;
+  uniform mat4 model;
   uniform mat4 proj;
   uniform mat4 bias;
   uniform mat4 shadowProj;
   uniform mat4 shadowModelView;
-  uniform mat4 model;
  
   void main() {
     gl_Position = proj * modelView * vec4(position, 1);
     shadowCoord = bias * shadowProj * shadowModelView * model * vec4(position, 1);
-    pnormal = (modelView * vec4(normal, 0)).xyz;
+    pnormal = (modelView * model * vec4(normal, 0)).xyz;
     pcolor = color;
   }
   ]]>
@@ -33,6 +33,7 @@
   in vec2 pcolor;
   in vec4 shadowCoord;
   uniform sampler2D texture0;
+  uniform sampler2D texture1;
   uniform sampler2D depth;
   uniform mat4 modelView;
   uniform vec3 light_dir;
@@ -44,6 +45,7 @@
     vec4 N = vec4(normalize(pnormal), 0);
     vec4 diffuse = vec4(max(dot(N, L), 0.0) * light_diffuse, 0);
     vec4 frag_color = texture2D(texture0, pcolor);
+    vec4 ambient = vec4(0.1, 0.1, 0.1, 1);
 
 		vec4 shadowCoordinateWdivide = shadowCoord / shadowCoord.w;
 		shadowCoordinateWdivide.z += 0.0005;
@@ -51,7 +53,7 @@
 	 	float shadow = 1.0;
 	 	if (shadowCoord.w > 0.0)
 	 	  shadow = distanceFromLight < shadowCoordinateWdivide.z ? 0.5 : 1.0;
-    gl_FragColor = frag_color * diffuse * shadow;
+    gl_FragColor = frag_color * (diffuse + ambient) * shadow;
   }
   ]]>
   </shader>

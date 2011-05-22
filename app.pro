@@ -10,6 +10,7 @@ SOURCES = App.cpp \
 HEADERS = App.h
 INCLUDEPATH += /home/matej/college/grafika/bullet/src
 INCLUDEPATH += /home/matej/college/grafika/bullet/Extras/Serialize/BulletWorldImporter
+QMAKE_LIBDIR += /home/matej/college/grafika/app
 CONFIG += qt \
     warn_on \
     release
