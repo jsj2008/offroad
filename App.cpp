@@ -685,8 +685,8 @@ void App::initializeGL() {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   // Build another FBO for shadows.
-  shadowMapWidth = 1024;
-  shadowMapHeight = 1024;
+  shadowMapWidth = 512;
+  shadowMapHeight = 512;
 	
   glGenTextures(1, &shadowDepthTexture);
   glBindTexture(GL_TEXTURE_2D, shadowDepthTexture);
