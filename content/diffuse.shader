@@ -19,7 +19,7 @@
   in vec3 pnormal;
  
   void main() {
-    gl_FragColor = vec4(pnormal,1);
+    gl_FragColor = vec4(pnormal,0.5);
   }
   </shader>
 </program>

@@ -723,7 +723,7 @@ void App::setupPhysics() {
   int rightIndex = 0;
   int upIndex = 2;
   int forwardIndex = 1;
-  float rollInfluence = 1.1f;
+  float rollInfluence = 0.6;
   float	wheelRadius = 0.5;
   float	wheelWidth = 0.5f;
   float	wheelFriction = 100;
@@ -999,7 +999,7 @@ void BlenderScene::draw(qint64 delta,
       model *= toMat4(matrix);
     }
 
-    // TODO: this overrides second unit, make this more general
+    // TODO: this overrides fifth unit, make this more general
     glActiveTexture(GL_TEXTURE0 + 5);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
     renderer->setUniform1i("depth", 5);
@@ -1033,7 +1033,7 @@ void App::updatePhysics(qint64 delta) {
 
   if (breaking) {
     if (speed < 0.1) {
-      engineForce = -500;
+      engineForce = -800;
       breakingForce = 0;
     }
     else
