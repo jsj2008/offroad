@@ -66,6 +66,7 @@ private:
       shader = NULL;
       body = NULL;
       ghost = false;
+      transparent = false;
     }
 
     Mesh* mesh;
@@ -77,6 +78,7 @@ private:
     btRigidBody* body;
     QString name;
     bool ghost;
+    bool transparent;
     btTransform transform;
   };
 

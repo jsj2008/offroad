@@ -727,8 +727,8 @@ void App::setupPhysics() {
   float	wheelRadius = 0.5;
   float	wheelWidth = 0.5f;
   float	wheelFriction = 100;
-  float	suspensionStiffness = 40.f;
-  float	suspensionDamping = 3.3f;
+  float	suspensionStiffness = 25.f;
+  float	suspensionDamping = 2.3f;
   float	suspensionCompression = 4.4f;
   btVector3 wheelDirection(0,0,-1);
   btVector3 wheelAxle(1,0,0);
@@ -784,8 +784,8 @@ void App::setupPhysics() {
   btVector3 localInertia(0,0,0);
   btTransform startTransform;
   startTransform.setIdentity();
-  startTransform.setOrigin(btVector3(5, 5, 5));
-  startTransform.setRotation(btQuaternion(btVector3(0,0,1), M_PI/2));
+  startTransform.setOrigin(btVector3(8.6, 5.45, 5));
+  startTransform.setRotation(btQuaternion(0.00149, 0.00283, 0.88404, 0.4674));
   chassisShape->calculateLocalInertia(vehicleMass, localInertia);
   btDefaultMotionState* chassisState = new btDefaultMotionState(startTransform);
   btRigidBody::btRigidBodyConstructionInfo chassisCI(vehicleMass, chassisState, compound, localInertia);
@@ -893,6 +893,9 @@ BlenderScene::BlenderScene(const char* fileName, btDynamicsWorld* world, Rendere
     if (e.hasAttribute("shader"))
       object.shader = renderer->addShader((path+e.attribute("shader")).toStdString().c_str());
 
+    if (e.hasAttribute("transparent"))
+      object.transparent = true;
+
     if (physicsDataPresent) {
       object.body = importer->getRigidBodyByName(object.name.toStdString().c_str());
       if (object.body != NULL && object.body->getMotionState() == NULL) {
@@ -969,6 +972,14 @@ void BlenderScene::draw(qint64 delta,
     if (object.shader == NULL || object.mesh == NULL)
       continue;
 
+    if (object.transparent) {
+      //glEnable(GL_BLEND);
+      //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      //glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+      glEnable(GL_ALPHA_TEST);
+      glAlphaFunc(GL_GREATER, 0.5f);
+    }
+
     renderer->setShader(object.shader);
 
     if (object.texture0 != NULL)
@@ -1013,6 +1024,12 @@ void BlenderScene::draw(qint64 delta,
     renderer->setUniformMat4("proj", proj);
     renderer->setUniformMat4("modelView", modelViewTop);
     renderer->drawMesh(object.mesh);
+
+    if (object.transparent) {
+      glDisable(GL_ALPHA_TEST);
+      //glDisable(GL_BLEND);
+      //glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+    }
   }
 }
 
@@ -1361,8 +1378,8 @@ void App::keyPressEvent(QKeyEvent* event) {
     case Qt::Key_Backspace: { // HAHA: jump case label error is just weird even for C++
       btTransform transform;
       transform.setIdentity();
-      transform.setOrigin(btVector3(5, 5, 5));
-      transform.setRotation(btQuaternion(btVector3(0,0,1), M_PI/2));
+      transform.setOrigin(btVector3(8.6, 5.45, 5));
+      transform.setRotation(btQuaternion(0.00149, 0.00283, 0.88404, 0.4674));
       chassis->setCenterOfMassTransform(transform);
       chassis->setLinearVelocity(btVector3(0,0,0));
       chassis->setAngularVelocity(btVector3(0,0,0));

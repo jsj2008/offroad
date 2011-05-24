@@ -129,6 +129,8 @@ class SceneExporter(bpy.types.Operator, ExportHelper):
 
         f.write('<object ')
         f.write('name="%s" shader="%s" mesh="%s"' % (obj.name, shader, mesh))
+        if 'transparent' in obj.game.properties and obj.game.properties['transparent'].value:
+          f.write(' transparent="true"')
         for i in range(n_slots):
           f.write(' texture%d="%s"' % (i, os.path.basename(slots[i].texture.image.filepath)))
         f.write('>\n')
