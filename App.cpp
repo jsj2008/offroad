@@ -530,11 +530,11 @@ App::App(const QGLFormat& format, ConfigurationWindow* configWin) : QGLWidget(fo
   timer = NULL;
   drawDebugInfo = false;
   accelerating = breaking = steeringLeft = steeringRight = false;
-  vehicleCam = false;
+  vehicleCam = true;
   engineForce = breakingForce = vehicleSteering = 0;
   mouseFree = true;
   stipple = true;
-  blurEnabled = false;
+  blurEnabled = true;
   drawAabb = false;
   shadows = true;
   camDir = btVector3(0,1,0);
