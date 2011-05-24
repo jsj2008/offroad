@@ -40,6 +40,7 @@
     vec4 diffuse = vec4(max(-dot(N, L), 0.0) * light_diffuse, 0);
     vec4 frag_color = texture2D(texture1, pcolor) + texture2D(texture0, pambient) - 0.5;
     gl_FragColor = diffuse * frag_color;
+    gl_FragColor.a = 1;
   }
   </shader>
 </program>

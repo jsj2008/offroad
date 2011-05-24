@@ -1516,8 +1516,8 @@ void ConfigurationWindow::addPointerValue(const char* name, float* var, float mi
 int main(int argc, char** args) {
   QApplication qapp(argc, args);
   QGLFormat format;
-  format.setSampleBuffers(true);
-  format.setSamples(2);
+  format.setSampleBuffers(false);
+  //format.setSamples(2);
   std::cout << "Using " << format.samples() << " samples." << std::endl;
   ConfigurationWindow win;
   win.resize(600, 200);

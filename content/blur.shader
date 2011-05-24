@@ -24,26 +24,29 @@
   const int num_samples = 3;
 
   void main() {
-    float zOverW = texture2D(depth, coords).r;
-    vec4 h = vec4(coords.x * 2 - 1, (1 - coords.y) * 2 - 1, zOverW, 1);
-    vec4 d = (modelViewInverse * projInverse * h);
-    vec4 world_pos = d / d.w;
-    vec4 current_pos = h;
-    vec4 previous_pos = proj * previousModelView * world_pos;
-    previous_pos /= previous_pos.w;
-    vec2 velocity = ((current_pos - previous_pos) / 5.f).xz;
-
     vec4 fragment = texture2D(color, coords);
-    vec2 ccoords = coords;
-    ccoords += velocity;
-    for (int i = 1; i < num_samples; ++i, ccoords += velocity) {
-      fragment += texture2D(color, ccoords);
-    }
-    fragment /= num_samples;
-    fragment.a = 1;
-    gl_FragColor = fragment;
+    if (fragment.a == 1.0) {
+      float zOverW = texture2D(depth, coords).r;
+      vec4 h = vec4(coords.x * 2 - 1, (1 - coords.y) * 2 - 1, zOverW, 1);
+      vec4 d = (modelViewInverse * projInverse * h);
+      vec4 world_pos = d / d.w;
+      vec4 current_pos = h;
+      vec4 previous_pos = proj * previousModelView * world_pos;
+      previous_pos /= previous_pos.w;
+      vec2 velocity = ((current_pos - previous_pos) / 5.f).xz;
 
-    /*gl_FragColor = texture2D(color, coords);*/
+      vec2 ccoords = coords;
+      ccoords += velocity;
+      for (int i = 1; i < num_samples; ++i, ccoords += velocity) {
+        fragment += texture2D(color, ccoords);
+      }
+      fragment /= num_samples;
+      fragment.a = 1;
+      gl_FragColor = fragment;
+    }
+    else {
+      gl_FragColor = fragment;
+    }
   }
   ]]>
   </shader>

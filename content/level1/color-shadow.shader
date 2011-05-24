@@ -43,6 +43,7 @@
 
     vec4 base = texture2D(texture0, pcolor);
     gl_FragColor = base * shadow;
+    gl_FragColor.a = 1;
   }
   ]]>
   </shader>

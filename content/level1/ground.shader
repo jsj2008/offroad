@@ -67,6 +67,7 @@
 	 	if (shadowCoord.w > 0.0)
 	 	  shadow = distanceFromLight < shadowCoordinateWdivide.z ? 0.5 : 1.0;
     gl_FragColor = mix(base, track, track.a) * (diffuse + ao - 0.5) * shadow;
+    gl_FragColor.a = 1;
   }
   ]]>
   </shader>

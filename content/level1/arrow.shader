@@ -31,6 +31,7 @@
     vec4 N = vec4(normalize(pnormal), 0);
     vec4 diffuse = vec4(max(dot(N, L), 0.0) * light_diffuse, 0);
     gl_FragColor = color * diffuse + color * 0.7;
+    gl_FragColor.a = 1;
   }
   ]]>
   </shader>
