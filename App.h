@@ -147,6 +147,7 @@ private:
   bool mouseFree;
   bool vehicleCam;
   btVector3 camDir;
+  btVector3 chassisPos;
 
   btDynamicsWorld* dynamicsWorld;
   btRigidBody* chassis;

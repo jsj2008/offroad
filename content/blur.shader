@@ -21,7 +21,7 @@
   uniform mat4 modelViewInverse;
   uniform mat4 projInverse;
 
-  const int num_samples = 3;
+  const int num_samples = 2;
 
   void main() {
     vec4 fragment = texture2D(color, coords);

@@ -784,7 +784,8 @@ void App::setupPhysics() {
   btVector3 localInertia(0,0,0);
   btTransform startTransform;
   startTransform.setIdentity();
-  startTransform.setOrigin(btVector3(8.6, 5.45, 5));
+  chassisPos = btVector3(8.6, 5.45, 5);
+  startTransform.setOrigin(chassisPos);
   startTransform.setRotation(btQuaternion(0.00149, 0.00283, 0.88404, 0.4674));
   chassisShape->calculateLocalInertia(vehicleMass, localInertia);
   btDefaultMotionState* chassisState = new btDefaultMotionState(startTransform);
@@ -1078,7 +1079,7 @@ void App::updatePhysics(qint64 delta) {
   vehicle->setSteeringValue(vehicleSteering, 0);
   vehicle->setSteeringValue(vehicleSteering, 1);
 
-  dynamicsWorld->stepSimulation(delta/700.f, 30);
+  dynamicsWorld->stepSimulation(delta/700.f, 10);
 }
 
 void App::updateFps() {
@@ -1148,7 +1149,8 @@ void App::paintGL() {
   mat4 proj;
   proj.perspective(fov, float(width()) / height(), 0.5, 700.);
 
-  btVector3 chassisPos = vehicle->getChassisWorldTransform().getOrigin();
+  btVector3 chassisPosGoal = vehicle->getChassisWorldTransform().getOrigin();
+  chassisPos = chassisPos.lerp(chassisPosGoal, delta*0.03);
 
   if (vehicleCam) {
     btVector3 forward = vehicle->getForwardVector();
@@ -1167,7 +1169,9 @@ void App::paintGL() {
 
   renderer->setShader(diffuse);
   btScalar matrix[16];
-  vehicle->getChassisWorldTransform().getOpenGLMatrix(matrix);
+  btTransform worldTransform = vehicle->getChassisWorldTransform();
+  worldTransform.setOrigin(chassisPos);
+  worldTransform.getOpenGLMatrix(matrix);
   modelViewTop *= toMat4(matrix);
   modelViewTop.rotate(90, vec3(1,0,0));
   modelViewTop.rotate(180, vec3(0,1,0));
