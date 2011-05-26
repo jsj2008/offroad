@@ -760,11 +760,11 @@ void App::initializeGL() {
   qSort(highscore.begin(), highscore.end(), scoreLessThan);
 
   hudFont = QFont("Chicken Butt");
-  timeFont = QFont("Chicken Butt");
+  timeFont = QFont("Canarsie Slab JL");
   infoFont = QFont("Consolas");
   highscoreFont = QFont("Jargon BRK");
   hudFont.setPointSize(110);
-  timeFont.setPointSize(42);
+  timeFont.setPointSize(20);
   highscoreFont.setPointSize(20);
 
   renderText(0,0, "Initializing font", hudFont);
@@ -1331,7 +1331,7 @@ void App::paintGL() {
 
   if (infoShown) {
     glColor3f(0,0,0);
-    renderText(50,50, "The Fps: " + fps, infoFont);
+    renderText(width()-100, 20, "The Fps: " + fps, infoFont);
   }
 
   if (state == Counting) {
@@ -1343,9 +1343,6 @@ void App::paintGL() {
   }
 
   if (state == App::Racing) {
-    glColor3f(0,0,0);
-    renderText(width()-400, 50, QString("Time: %1s").arg(trackTimer->elapsed() / 1000.), timeFont);
-
     glDisable(GL_DEPTH_TEST);
     renderer->disableShaders();
     glViewport(0,0, this->width(), this->height());
@@ -1355,11 +1352,42 @@ void App::paintGL() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    glActiveTexture(GL_TEXTURE0 + 0);
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, speedometerBack->getID());
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    int deliX = 140;
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glColor4f(0.6,0,0, 0.8);
+    glBegin(GL_QUADS);
+    glVertex2f(45, height()-25);
+    glVertex2f(deliX, height()-25);
+    glVertex2f(deliX, height()-55);
+    glVertex2f(45, height()-55);
+    glEnd();
+
+    glColor4f(0,0,0, 0.8);
+    glBegin(GL_QUADS);
+    glVertex2f(deliX, height()-25);
+    glVertex2f(330, height()-25);
+    glVertex2f(330, height()-55);
+    glVertex2f(deliX, height()-55);
+    glEnd();
+
+    qint64 elapsed = trackTimer->elapsed();
+    int minutes = elapsed / 60000;
+    int seconds = (elapsed % 60000) / 1000;
+    int mili = elapsed % 100;
+    glColor3f(1,1,1);
+    glDisable(GL_BLEND);
+    renderText(50, 50, QString("Time %1:%2:%3").arg(minutes, 2, 10, QChar('0'))
+      .arg(seconds, 2, 10, QChar('0'))
+      .arg(mili, 2, 10, QChar('0')),
+      timeFont);
+
+    glActiveTexture(GL_TEXTURE0 + 0);
+    glEnable(GL_BLEND);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, speedometerBack->getID());
 
     int size = 200;
     glColor3f(1,1,1);
