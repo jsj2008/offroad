@@ -1,4 +1,953 @@
 <scene>
+<object name="stripe.011" shader="color.shader" mesh="stripe.mesh" texture0="stripes-worn-fixed.jpg">
+  <position x="-30.409210" y="-63.702309" z="1.002244" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="stripe.010" shader="color.shader" mesh="stripe.mesh" texture0="stripes-worn-fixed.jpg">
+  <position x="-30.409210" y="-66.203369" z="1.002244" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="stripe.009" shader="color.shader" mesh="stripe.mesh" texture0="stripes-worn-fixed.jpg">
+  <position x="-30.409210" y="-68.726982" z="1.002244" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="stripe.008" shader="color.shader" mesh="stripe.mesh" texture0="stripes-worn-fixed.jpg">
+  <position x="-30.409210" y="-71.396042" z="1.002244" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.033" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="9.426487" y="-84.493073" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.032" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="3.324337" y="-84.493073" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.031" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-3.061344" y="-84.493073" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.030" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-38.735806" y="-84.493073" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.029" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-32.350124" y="-84.493073" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.028" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-26.247974" y="-84.493073" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.027" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-60.046654" y="-84.493073" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.026" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-66.148804" y="-84.493073" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.025" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-72.534485" y="-84.493073" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.037" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-56.347210" y="-39.024109" z="1.361305" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.036" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-91.794395" y="-40.029190" z="1.157711" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.035" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-91.794395" y="-40.029190" z="1.416531" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.034" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-91.794395" y="-40.029190" z="1.693187" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.033" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-91.794395" y="-40.656807" z="1.693187" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.032" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-91.794395" y="-40.656807" z="1.416531" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.031" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-91.794395" y="-40.656807" z="1.157711" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.030" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-91.794395" y="-41.298489" z="1.157711" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.029" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-91.794395" y="-41.298489" z="1.416531" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.028" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-91.794395" y="-41.298489" z="1.693187" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="arrow.000" shader="arrow.shader" mesh="arrow.mesh">
+  <position x="-91.704399" y="-48.895889" z="2.083602" />
+  <rotation x="0.123380" y="0.324770" z="0.876586" w="0.333014" />
+  <color r="0.800000" g="0.800000" b="0.500000" />
+</object>
+<object name="plank.009" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.139641" y="-31.919594" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.015" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.139641" y="-32.225220" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.013" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.139641" y="-32.529526" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.012" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.139641" y="-38.571266" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="label" shader="labels.shader" mesh="label.mesh" transparent="true" texture0="labels.png">
+  <position x="0.000000" y="0.000000" z="0.000000" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.024" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="32.274464" y="-28.806156" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="1.000000" w="0.000000" />
+</object>
+<object name="billboard.023" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="32.274464" y="-21.724155" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="1.000000" w="0.000000" />
+</object>
+<object name="billboard.022" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-51.943714" y="-7.725045" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.021" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-45.385368" y="-7.725045" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.002" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-23.165871" y="-7.725045" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.001" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-16.780191" y="-7.725045" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.020" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-69.481003" y="15.552295" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.019" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-63.422558" y="15.552295" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.018" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-57.491657" y="15.552295" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.007" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-51.479507" y="15.552295" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.006" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-29.079361" y="15.552295" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.005" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-22.979383" y="15.552295" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.004" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-16.926561" y="15.552295" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.011" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-32.319527" y="-50.759342" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.010" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-16.956549" y="-50.759342" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.008" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-10.589994" y="-50.759342" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.017" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-103.498680" y="-46.865341" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.016" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-103.498680" y="-40.753628" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.015" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-103.498680" y="-34.247147" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.014" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-103.498680" y="-13.244872" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.013" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-103.498680" y="-6.959605" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.012" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-103.498680" y="-0.825080" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.009" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-4.162755" y="-50.759342" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard.003" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-10.678041" y="15.552295" z="3.068376" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="barrel.013" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
+  <position x="-92.930237" y="1.582567" z="1.485179" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="barrel.012" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
+  <position x="-92.930237" y="0.724167" z="1.485179" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="barrel.011" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
+  <position x="-92.930237" y="-0.054061" z="1.485179" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="roof.009" shader="color.shader" mesh="roof.mesh" texture0="roof-plates.jpg">
+  <position x="-59.556713" y="-37.945644" z="3.490957" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="roof.007" shader="color.shader" mesh="roof.mesh" texture0="roof-plates.jpg">
+  <position x="-59.556713" y="-33.761005" z="3.490957" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="roof.006" shader="color.shader" mesh="roof.mesh" texture0="roof-plates.jpg">
+  <position x="-59.556713" y="-35.250648" z="3.490957" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="roof.005" shader="color.shader" mesh="roof.mesh" texture0="roof-plates.jpg">
+  <position x="-59.556713" y="-32.342583" z="3.490957" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="roof.004" shader="color.shader" mesh="roof.mesh" texture0="roof-plates.jpg">
+  <position x="-59.556713" y="-39.622185" z="3.490957" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="roof.003" shader="color.shader" mesh="roof.mesh" texture0="roof-plates.jpg">
+  <position x="-66.151550" y="-37.569584" z="3.490957" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="roof.002" shader="color.shader" mesh="roof.mesh" texture0="roof-plates.jpg">
+  <position x="-66.151550" y="-39.622185" z="3.490957" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="barrel.010" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
+  <position x="-61.897488" y="-32.713902" z="1.724917" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="barrel.009" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
+  <position x="-61.897488" y="-32.085888" z="1.724917" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="barrel.008" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
+  <position x="-62.769871" y="-32.670593" z="1.724917" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.027" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-62.745029" y="-37.422810" z="1.896781" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.026" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-62.745029" y="-37.422810" z="1.620125" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.025" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-62.745029" y="-37.422810" z="1.361305" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.024" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-62.745029" y="-38.097782" z="1.361305" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.023" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-62.745029" y="-38.097782" z="1.620125" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.022" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-62.745029" y="-38.097782" z="1.896781" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.021" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-61.854290" y="-38.097782" z="1.896781" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.020" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-61.854290" y="-38.097782" z="1.620125" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.019" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-61.854290" y="-38.097782" z="1.361305" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.018" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-61.854290" y="-37.282158" z="1.361305" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.017" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-61.854290" y="-37.282158" z="1.620125" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.016" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-61.854290" y="-37.282158" z="1.896781" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.015" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-60.993748" y="-37.282158" z="1.896781" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.014" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-60.993748" y="-37.282158" z="1.620125" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.013" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-60.993748" y="-37.282158" z="1.361305" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.012" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-60.993748" y="-38.044956" z="1.361305" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.011" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-60.993748" y="-38.044956" z="1.620125" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.010" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-60.993748" y="-38.044956" z="1.896781" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="grass.017" shader="grass.shader" mesh="grass.mesh" transparent="true" texture0="grass-tall-alpha.png">
+  <position x="-57.092663" y="-32.167793" z="1.237382" />
+  <rotation x="0.000000" y="0.000000" z="-0.533439" w="0.845838" />
+</object>
+<object name="grass.016" shader="grass.shader" mesh="grass.mesh" transparent="true" texture0="grass-tall-alpha.png">
+  <position x="-58.219700" y="-42.370365" z="0.960472" />
+  <rotation x="0.000000" y="-0.000000" z="-0.562149" w="0.827036" />
+</object>
+<object name="grass.015" shader="grass.shader" mesh="grass.mesh" transparent="true" texture0="grass-tall-alpha.png">
+  <position x="-57.139149" y="-40.309910" z="1.116856" />
+  <rotation x="0.000000" y="-0.000000" z="-0.562149" w="0.827036" />
+</object>
+<object name="tire.009" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-58.086201" y="-39.705513" z="1.896781" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.008" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-58.086201" y="-39.705513" z="1.620125" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.007" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-58.086201" y="-39.705513" z="1.361305" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.006" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="-58.086201" y="-39.024109" z="1.361305" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="barrel.007" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
+  <position x="-58.691517" y="-32.670593" z="1.724917" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="barrel.006" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
+  <position x="-57.819134" y="-32.085888" z="1.724917" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="barrel.005" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
+  <position x="-57.819134" y="-32.713902" z="1.724917" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankS.008" shader="color.shader" mesh="plankS.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.242928" y="-33.438728" z="1.784871" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankS.007" shader="color.shader" mesh="plankS.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.242928" y="-33.792828" z="1.784871" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankS.006" shader="color.shader" mesh="plankS.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.242928" y="-34.147655" z="1.784871" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankS.005" shader="color.shader" mesh="plankS.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.142990" y="-38.871758" z="1.784871" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankS.004" shader="color.shader" mesh="plankS.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.142990" y="-39.177700" z="1.784871" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankS.003" shader="color.shader" mesh="plankS.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.142990" y="-39.489189" z="1.784871" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankS.001" shader="color.shader" mesh="plankS.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.142990" y="-34.399460" z="1.784871" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankS.000" shader="color.shader" mesh="plankS.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.142990" y="-34.096973" z="1.784871" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.010" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.139641" y="-40.101891" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.008" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.139641" y="-37.626450" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankS.002" shader="color.shader" mesh="plankS.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.142990" y="-33.791306" z="1.784871" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="roof.001" shader="color.shader" mesh="roof.mesh" texture0="roof-plates.jpg">
+  <position x="-63.180805" y="-39.622185" z="3.490957" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="roof" shader="color.shader" mesh="roof.mesh" texture0="roof-plates.jpg">
+  <position x="-61.027702" y="-39.622185" z="3.490957" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.053" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-65.559875" y="-37.531528" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.052" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-65.559875" y="-37.893719" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.051" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-65.559875" y="-38.261162" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.050" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-65.559875" y="-38.625214" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.049" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-65.559875" y="-38.988171" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.048" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-65.559875" y="-39.330467" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.047" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-65.559875" y="-39.696037" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.046" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-65.559875" y="-40.034309" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.058" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.314949" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.057" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-66.963913" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.056" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-65.263435" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.055" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-65.608002" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.045" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.121986" y="-40.034309" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.044" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.121986" y="-39.696037" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.043" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.121986" y="-39.330467" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.042" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.121986" y="-38.988171" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.041" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.121986" y="-38.625214" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.040" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.121986" y="-38.261162" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.039" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.121986" y="-37.893719" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.038" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.121986" y="-37.531528" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.037" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.121986" y="-37.169590" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.036" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.121986" y="-36.797989" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.035" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.215973" y="-31.982578" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.034" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.215973" y="-32.354179" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.033" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.215973" y="-32.716118" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.032" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.215973" y="-33.078308" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.028" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.215973" y="-34.515057" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.027" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.215973" y="-34.880627" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.026" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.215973" y="-35.218899" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.025" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-63.648354" y="-35.218899" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.024" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-63.648354" y="-34.880627" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.023" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-63.648354" y="-34.515057" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.022" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-63.648354" y="-34.172760" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.021" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-63.648354" y="-33.809803" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.020" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-63.648354" y="-33.445751" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.019" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-63.648354" y="-33.078308" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.002" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-63.648354" y="-32.716118" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.001" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-63.648354" y="-32.354179" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.000" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-63.648354" y="-31.982578" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.051" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-60.642399" y="-35.308174" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.050" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-61.015446" y="-35.308174" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.049" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-61.371155" y="-35.308174" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.048" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-61.709805" y="-35.308174" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.047" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-62.100395" y="-35.308174" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.046" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-62.490810" y="-35.308174" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.045" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-62.863857" y="-35.308174" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.044" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-63.289387" y="-35.308174" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.043" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-63.289387" y="-38.684631" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.042" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-62.863857" y="-38.684631" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.041" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-62.490810" y="-38.684631" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.040" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-62.100395" y="-38.684631" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.039" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-61.709805" y="-38.684631" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.038" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-61.371155" y="-38.684631" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.037" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-61.015446" y="-38.684631" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.036" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-60.642399" y="-38.684631" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.035" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-64.897621" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.034" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-64.566444" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.033" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-64.234825" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.032" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-63.886345" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.031" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-63.541775" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.030" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-63.186844" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.029" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-62.831913" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.028" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-62.480892" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.027" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-62.137493" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.026" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-61.785217" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.025" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-61.420212" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.024" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-61.039768" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.023" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-60.642399" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.022" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-60.246433" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.021" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.850468" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.020" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.470024" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.019" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.122654" y="-40.496071" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.018" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-67.166550" y="-31.644787" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.017" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-66.818672" y="-31.644787" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.016" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-66.462631" y="-31.644787" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.015" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-66.128738" y="-31.644787" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.014" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-65.779770" y="-31.644787" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.013" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-65.446739" y="-31.644787" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.012" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-65.100464" y="-31.644787" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.011" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-64.760506" y="-31.644787" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.010" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-64.433319" y="-31.644787" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.009" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-64.094765" y="-31.644787" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.008" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-63.729095" y="-31.644787" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.007" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-63.372665" y="-31.644787" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.006" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-63.036739" y="-31.644787" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.005" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-60.951607" y="-31.644787" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.004" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-60.549503" y="-31.644787" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.003" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-60.166595" y="-31.644787" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.002" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.801617" y="-31.644787" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR.001" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.465992" y="-31.644787" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plankR" shader="color.shader" mesh="plankR.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.139641" y="-31.644787" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.018" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.139641" y="-32.839241" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.017" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.139641" y="-33.147884" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.016" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.139641" y="-33.477413" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.007" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.139641" y="-34.705360" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.006" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.139641" y="-35.014915" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.005" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.139641" y="-35.316101" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.004" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.139641" y="-35.618229" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.003" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.139641" y="-37.937443" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.014" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.139641" y="-38.248909" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="plank.011" shader="color.shader" mesh="plank.mesh" texture0="wood-plank-floor.jpg">
+  <position x="-59.139641" y="-39.799152" z="2.311206" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.005" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="4.406116" y="7.562840" z="1.249038" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.004" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="4.406116" y="7.562840" z="1.478318" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.003" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="4.406116" y="7.562840" z="1.705196" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.002" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="7.409556" y="-2.613523" z="1.705196" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire.001" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="7.409556" y="-2.613523" z="1.478318" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="barrel.004" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
+  <position x="4.033537" y="-5.761268" z="1.485179" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="barrel.003" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
+  <position x="5.163134" y="-5.761268" z="1.485179" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="barrel.002" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
+  <position x="6.248834" y="-5.761268" z="1.485179" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="barrel.001" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
+  <position x="5.791241" y="-5.150509" z="1.485179" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tank.003" shader="color.shader" mesh="tank.mesh" texture0="air-tank.jpg">
+  <position x="4.560086" y="-5.031707" z="1.134821" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tank.002" shader="color.shader" mesh="tank.mesh" texture0="air-tank.jpg">
+  <position x="4.818184" y="-4.561425" z="1.134821" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tank.001" shader="color.shader" mesh="tank.mesh" texture0="air-tank.jpg">
+  <position x="4.334669" y="-4.253116" z="1.134821" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="background" shader="color.shader" mesh="background.mesh" texture0="sand-dirt.jpg">
+  <position x="0.000000" y="0.000000" z="0.000000" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="landscape" shader="color.shader" mesh="landscape.mesh" texture0="sand-dirt.jpg">
+  <position x="0.000000" y="0.000000" z="0.000000" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="grass.014" shader="grass.shader" mesh="grass.mesh" transparent="true" texture0="grass-tall-alpha.png">
+  <position x="3.153684" y="8.617102" z="1.202584" />
+  <rotation x="0.000000" y="0.000000" z="-0.511799" w="0.859105" />
+</object>
+<object name="grass.013" shader="grass.shader" mesh="grass.mesh" transparent="true" texture0="grass-tall-alpha.png">
+  <position x="-5.209101" y="2.402289" z="0.894030" />
+  <rotation x="0.000000" y="-0.000000" z="-0.562149" w="0.827036" />
+</object>
+<object name="grass.012" shader="grass.shader" mesh="grass.mesh" transparent="true" texture0="grass-tall-alpha.png">
+  <position x="-10.090598" y="-3.204345" z="0.975978" />
+  <rotation x="0.000000" y="-0.000000" z="-0.562149" w="0.827036" />
+</object>
+<object name="grass.011" shader="grass.shader" mesh="grass.mesh" transparent="true" texture0="grass-tall-alpha.png">
+  <position x="-10.419119" y="-4.163347" z="0.975978" />
+  <rotation x="0.000000" y="-0.000000" z="-0.562149" w="0.827036" />
+</object>
+<object name="grass.010" shader="grass.shader" mesh="grass.mesh" transparent="true" texture0="grass-tall-alpha.png">
+  <position x="-11.567253" y="-4.163347" z="0.975978" />
+  <rotation x="0.000000" y="-0.000000" z="-0.562149" w="0.827036" />
+</object>
+<object name="grass.009" shader="grass.shader" mesh="grass.mesh" transparent="true" texture0="grass-tall-alpha.png">
+  <position x="-10.509930" y="-5.088192" z="0.975978" />
+  <rotation x="0.000000" y="-0.000000" z="-0.562149" w="0.827036" />
+</object>
+<object name="grass.008" shader="grass.shader" mesh="grass.mesh" transparent="true" texture0="grass-tall-alpha.png">
+  <position x="-9.127970" y="-4.691387" z="0.876019" />
+  <rotation x="0.000000" y="-0.000000" z="-0.562149" w="0.827036" />
+</object>
+<object name="grass.007" shader="grass.shader" mesh="grass.mesh" transparent="true" texture0="grass-tall-alpha.png">
+  <position x="-7.823257" y="-5.461725" z="0.975978" />
+  <rotation x="0.000000" y="-0.000000" z="-0.562149" w="0.827036" />
+</object>
+<object name="grass.006" shader="grass.shader" mesh="grass.mesh" transparent="true" texture0="grass-tall-alpha.png">
+  <position x="-7.823257" y="-2.952546" z="0.850524" />
+  <rotation x="0.000000" y="-0.000000" z="-0.562149" w="0.827036" />
+</object>
+<object name="grass.005" shader="grass.shader" mesh="grass.mesh" transparent="true" texture0="grass-tall-alpha.png">
+  <position x="-8.665569" y="-2.952546" z="0.975978" />
+  <rotation x="0.000000" y="-0.000000" z="-0.562149" w="0.827036" />
+</object>
+<object name="grass.004" shader="grass.shader" mesh="grass.mesh" transparent="true" texture0="grass-tall-alpha.png">
+  <position x="-4.780996" y="0.517617" z="0.975978" />
+  <rotation x="0.000000" y="-0.000000" z="-0.562149" w="0.827036" />
+</object>
+<object name="grass.003" shader="grass.shader" mesh="grass.mesh" transparent="true" texture0="grass-tall-alpha.png">
+  <position x="7.888941" y="-3.998536" z="1.277282" />
+  <rotation x="0.000000" y="0.000000" z="-0.152420" w="0.988316" />
+</object>
+<object name="grass.002" shader="grass.shader" mesh="grass.mesh" transparent="true" texture0="grass-tall-alpha.png">
+  <position x="5.779991" y="-1.213510" z="1.438153" />
+  <rotation x="0.000000" y="-0.000000" z="-0.135869" w="0.990727" />
+</object>
+<object name="grass.001" shader="grass.shader" mesh="grass.mesh" transparent="true" texture0="grass-tall-alpha.png">
+  <position x="6.371238" y="-2.528270" z="1.163422" />
+  <rotation x="0.000000" y="-0.000000" z="-0.310883" w="0.950448" />
+</object>
+<object name="grass" shader="grass.shader" mesh="grass.mesh" transparent="true" texture0="grass-tall-alpha.png">
+  <position x="4.796782" y="-1.624022" z="1.438153" />
+  <rotation x="0.000000" y="-0.000000" z="-0.135869" w="0.990727" />
+</object>
 <object name="hrosc.011" shader="car.shader" mesh="hrosc.mesh" texture0="hrosc-ambient.png">
   <position x="-29.950420" y="-36.796001" z="1.272014" />
   <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
@@ -59,12 +1008,12 @@
   <color r="0.800000" g="0.800000" b="0.500000" />
 </object>
 <object name="arrow.003" shader="arrow.shader" mesh="arrow.mesh">
-  <position x="-62.711735" y="-11.111206" z="2.083602" />
+  <position x="-62.711735" y="-16.180439" z="2.083602" />
   <rotation x="0.000000" y="0.000000" z="0.999485" w="0.032108" />
   <color r="0.800000" g="0.800000" b="0.500000" />
 </object>
 <object name="arrow.002" shader="arrow.shader" mesh="arrow.mesh">
-  <position x="-90.090057" y="-2.094652" z="2.083602" />
+  <position x="-90.090057" y="-7.972276" z="2.083602" />
   <rotation x="0.040487" y="0.339988" z="0.932966" w="0.111100" />
   <color r="0.800000" g="0.800000" b="0.500000" />
 </object>
@@ -74,7 +1023,7 @@
   <color r="0.800000" g="0.800000" b="0.500000" />
 </object>
 <object name="skybox" shader="color-no-light.shader" mesh="skybox.mesh" texture0="SkyBox-Clouds-Wispy-MidMorning.png">
-  <position x="0.000000" y="0.000000" z="0.000000" />
+  <position x="29.592304" y="11.312874" z="-7.048519" />
   <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
 <object name="ovira.001" shader="color.shader" mesh="ovira.mesh" texture0="ovira.png">
@@ -141,40 +1090,12 @@
   <position x="5.096181" y="-2.402694" z="1.368736" />
   <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
-<object name="Tank.004" shader="color.shader" mesh="Tank.mesh" texture0="air-tank.jpg">
-  <position x="3.766103" y="-5.273429" z="1.225115" />
-  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
-</object>
-<object name="Tank.003" shader="color.shader" mesh="Tank.mesh" texture0="air-tank.jpg">
-  <position x="3.258403" y="-5.896052" z="1.345133" />
-  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
-</object>
-<object name="Tank.002" shader="color.shader" mesh="Tank.mesh" texture0="air-tank.jpg">
-  <position x="3.203059" y="-6.064429" z="1.126155" />
-  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
-</object>
-<object name="Tank.001" shader="color.shader" mesh="Tank.mesh" texture0="air-tank.jpg">
-  <position x="3.626561" y="-5.497194" z="1.152478" />
-  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
-</object>
-<object name="Tank" shader="color.shader" mesh="Tank.mesh" texture0="air-tank.jpg">
-  <position x="3.411546" y="-5.780764" z="1.153030" />
+<object name="tank" shader="color.shader" mesh="tank.mesh" texture0="air-tank.jpg">
+  <position x="4.560086" y="-3.912970" z="1.134821" />
   <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
 <object name="classic" shader="carb.shader" mesh="classic.mesh" texture0="classic-ambient.png">
-  <position x="1.448200" y="8.438224" z="1.686727" />
-  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
-</object>
-<object name="barrel.004" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
-  <position x="5.616252" y="-4.549945" z="1.356767" />
-  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
-</object>
-<object name="barrel.003" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
-  <position x="4.896426" y="-4.549945" z="1.356767" />
-  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
-</object>
-<object name="barrel.001" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
-  <position x="3.528757" y="-4.549945" z="1.356767" />
+  <position x="2.038517" y="8.496127" z="1.654422" />
   <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
 <object name="hrosc" shader="car.shader" mesh="hrosc.mesh" texture0="hrosc-ambient.png">
@@ -182,7 +1103,19 @@
   <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
 <object name="barrel" shader="color.shader" mesh="barrel.mesh" texture0="barrel-color.jpg">
-  <position x="2.934901" y="-4.549945" z="1.356767" />
+  <position x="5.791241" y="-3.903678" z="1.485179" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="tire" shader="color.shader" mesh="tire.mesh" texture0="tire.jpg">
+  <position x="7.409556" y="-2.613523" z="1.249038" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="bottom" shader="color-ambient.shader" mesh="bottom.mesh" texture0="wood-plank-clean.jpg" texture1="house-ambient.png">
+  <position x="-63.618702" y="-36.407719" z="1.020101" />
+  <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
+</object>
+<object name="billboard" shader="color.shader" mesh="billboard.mesh" texture0="wood-old.jpg">
+  <position x="-10.678041" y="-7.725045" z="3.068376" />
   <rotation x="0.000000" y="0.000000" z="0.000000" w="1.000000" />
 </object>
 </scene>

@@ -57,7 +57,7 @@
     vec4 diffuse = vec4(max(dot(N, L), 0.0) * light_diffuse, 0);
     vec4 base = texture2D(texture0, pcolor);
     vec4 track = texture2D(texture1, ptracks);
-    vec4 ao = texture2D(texture2, pao);
+    vec4 ao = texture2D(texture2, pao) + vec4(0.2, 0.2, 0.2, 1);
     /*vec4 ambient = vec4(0.1, 0.1, 0.1, 1);*/
 
 		vec4 shadowCoordinateWdivide = shadowCoord / shadowCoord.w;
@@ -66,6 +66,8 @@
 	 	float shadow = 1.0;
 	 	if (shadowCoord.w > 0.0)
 	 	  shadow = distanceFromLight < shadowCoordinateWdivide.z ? 0.5 : 1.0;
+    if (shadowCoord.x > 1.0 || shadowCoord.y > 1.0 || shadowCoord.x < 0.0 || shadowCoord.y < 0.0)
+      shadow = 1.0;
     gl_FragColor = mix(base, track, track.a) * (diffuse + ao - 0.5) * shadow;
     gl_FragColor.a = 1;
   }

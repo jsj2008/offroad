@@ -45,7 +45,7 @@
     vec4 N = vec4(normalize(pnormal), 0);
     vec4 diffuse = vec4(max(dot(N, L), 0.0) * light_diffuse, 0);
     vec4 frag_color = texture2D(texture0, pcolor);
-    vec4 ambient = vec4(0.1, 0.1, 0.1, 1);
+    vec4 ambient = vec4(0.3, 0.3, 0.3, 3);
 
 		vec4 shadowCoordinateWdivide = shadowCoord / shadowCoord.w;
 		shadowCoordinateWdivide.z += 0.0005;
@@ -53,6 +53,8 @@
 	 	float shadow = 1.0;
 	 	if (shadowCoord.w > 0.0)
 	 	  shadow = distanceFromLight < shadowCoordinateWdivide.z ? 0.5 : 1.0;
+    if (shadowCoord.x > 1.0 || shadowCoord.y > 1.0 || shadowCoord.x < 0.0 || shadowCoord.y < 0.0)
+      shadow = 1.0;
     gl_FragColor = frag_color * (diffuse + ambient) * shadow;
     gl_FragColor.a = 1;
   }

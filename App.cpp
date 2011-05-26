@@ -321,13 +321,22 @@ public:
   }
 
   void setShader(Shader* shader) {
-    glUseProgram(shader->program);
-    currentProgram = shader->program;
+    // TODO: assert
+    if (shader != currentShader) {
+      glUseProgram(shader->program);
+      currentProgram = shader->program;
+      currentShader = shader;
+    }
+  }
+
+  Shader* getCurrentShader() const {
+    return currentShader;
   }
 
   void disableShaders() {
     glUseProgram(0);
     currentProgram = 0;
+    currentShader = 0; // TODO: nullptr?
   }
 
   void setUniform1i(const char* name, int value) {
@@ -521,9 +530,11 @@ private:
   QHash<QString, Mesh*> loadedMeshes;
 
   GLuint currentProgram;
+  Shader* currentShader;
 };
 
-App::App(const QGLFormat& format, ConfigurationWindow* configWin) : QGLWidget(format, 0), maxSteering(0.5) {
+App::App(const QGLFormat& format, ConfigurationWindow* configWin) :
+  QGLWidget(format, 0), maxSteering(0.5) {
   this->configWin = configWin;
   renderer = NULL;
   cam = NULL;
@@ -541,14 +552,15 @@ App::App(const QGLFormat& format, ConfigurationWindow* configWin) : QGLWidget(fo
   framesDrawn = 0;
   fps = "";
   fov = 75;
+  infoShown = true;
+  numResets = 0;
 }
 
 App::~App() {
   this->cleanUpPhysics();
 
   glDeleteFramebuffersEXT(1, &fbo);
-  glDeleteRenderbuffersEXT(1, &depthBuffer);
-
+  //glDeleteRenderbuffersEXT(1, &depthBuffer);
   glDeleteFramebuffersEXT(1, &shadowFbo);
 
   if (scene)
@@ -565,10 +577,13 @@ App::~App() {
 
   if (fpsTimer)
     delete fpsTimer;
+
+  if (trackTimer)
+    delete trackTimer;
 }
 
 void App::initializeGL() {
-  this->setWindowTitle("Offroad 2");
+  this->setWindowTitle("Monster Truck TODO 2");
   this->setMouseTracking(true);
   this->grabKeyboard();
   this->setCursor(Qt::BlankCursor);
@@ -578,6 +593,8 @@ void App::initializeGL() {
   fpsTimer = new QTimer(this);
   connect(fpsTimer, SIGNAL(timeout()), this, SLOT(updateFps()));
   fpsTimer->start(1000);
+
+  trackTimer = new QElapsedTimer();
 
   GLenum err = glewInit();
   if (GLEW_OK != err) {
@@ -634,7 +651,6 @@ void App::initializeGL() {
   }
 
   cam = new FirstPersonCamera;
-  checkErrors();
 
   //configWin->addPointerValue("Rotation", &rotation, 0, 360);
 
@@ -642,37 +658,37 @@ void App::initializeGL() {
   glEnable(GL_MULTISAMPLE);
 
   rttWidth = 1024;
-  rttHeight = 1024;
+  rttHeight = 768;
 
   glGenFramebuffers(1, &fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
+/*
   glGenRenderbuffers(1, &depthBuffer);
   glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, rttWidth, rttHeight);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer);*/
 
   glGenTextures(1, &colorBuffer);
   glBindTexture(GL_TEXTURE_2D, colorBuffer);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, rttWidth, rttHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  //glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorBuffer, 0);
 
   glGenTextures(1, &depthTexture);
   glBindTexture(GL_TEXTURE_2D, depthTexture);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  //glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, rttWidth, rttHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
   glBindTexture(GL_TEXTURE_2D, 0);
 
-  // TODO: this is just wrong
+  // TODO: this is just weird
   glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depthTexture, 0);
 
   GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -695,7 +711,7 @@ void App::initializeGL() {
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowMapWidth, shadowMapHeight, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, shadowMapWidth, shadowMapHeight, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
   glBindTexture(GL_TEXTURE_2D, 0);
 
   glGenFramebuffers(1, &shadowFbo);
@@ -715,7 +731,37 @@ void App::initializeGL() {
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+  checkErrors();
+
+  if (!QFile::exists(highscoreFilename)) {
+    QFile file(highscoreFilename);
+    file.open(QIODevice::WriteOnly);
+    QDataStream out(&file);
+    out << highscore;
+    file.close();
+  }
+
+  QFile file(highscoreFilename);
+  file.open(QIODevice::ReadOnly);
+  QDataStream in(&file);
+  in >> highscore;
+  file.close();
+
+  hudFont = QFont("Chicken Butt");
+  timeFont = QFont("Chicken Butt");
+  infoFont = QFont("Consolas");
+  highscoreFont = QFont("Jargon BRK");
+  hudFont.setPointSize(110);
+  timeFont.setPointSize(42);
+  highscoreFont.setPointSize(20);
+
+  renderText(0,0, "Initializing font", hudFont);
+  renderText(0,0, "Initializing another font", timeFont);
+  renderText(0,0, "Otherwise there would be a hickup", highscoreFont);
+
+  state = App::Counting;
   std::cout << "Init complete!" << std::endl;
+  trackTimer->start();
 }
 
 void App::setupPhysics() {
@@ -887,6 +933,8 @@ BlenderScene::BlenderScene(const char* fileName, btDynamicsWorld* world, Rendere
       object.texture2 = renderer->addTexture((path+e.attribute("texture2")).toStdString().c_str());
     if (e.hasAttribute("texture3"))
       object.texture3 = renderer->addTexture((path+e.attribute("texture3")).toStdString().c_str());
+    if (e.hasAttribute("texture4"))
+      object.texture4 = renderer->addTexture((path+e.attribute("texture4")).toStdString().c_str());
 
     if (e.hasAttribute("mesh"))
       object.mesh = renderer->addMesh((path+e.attribute("mesh")).toStdString().c_str());
@@ -934,6 +982,7 @@ BlenderScene::BlenderScene(const char* fileName, btDynamicsWorld* world, Rendere
     objects << object;
   }
 
+  qSort(objects.begin(), objects.end()); // Sort objects by shader (minimize state changes).
   std::cout << "Added " << objects.size() << " objects to the world." << std::endl;
 }
 
@@ -967,7 +1016,6 @@ void BlenderScene::draw(qint64 delta,
   for (int i = 0; i < objects.size(); ++i) {
     RenderableObject object = objects.at(i);
 
-    // TODO: sort objects by shader
     // TODO: put objects into some kind of space tree
 
     if (object.shader == NULL || object.mesh == NULL)
@@ -991,6 +1039,8 @@ void BlenderScene::draw(qint64 delta,
       renderer->setTexture("texture2", object.texture2, 2);
     if (object.texture3 != NULL)
       renderer->setTexture("texture3", object.texture3, 3);
+    if (object.texture4 != NULL)
+      renderer->setTexture("texture4", object.texture4, 4);
 
     mat4 modelViewTop = modelView;
     mat4 model;
@@ -1011,7 +1061,7 @@ void BlenderScene::draw(qint64 delta,
       model *= toMat4(matrix);
     }
 
-    // TODO: this overrides fifth unit, make this more general
+    // TODO: this overrides sixth unit, make this more general
     glActiveTexture(GL_TEXTURE0 + 5);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
     renderer->setUniform1i("depth", 5);
@@ -1020,6 +1070,7 @@ void BlenderScene::draw(qint64 delta,
     renderer->setUniformMat4("shadowModelView", lightModelView);
     renderer->setUniformMat4("model", model);
 
+    // TODO: lighty light
     vec3 light_dir = vec3(0,1,3).normalized();
     renderer->setUniform3f("light_dir", light_dir);
     renderer->setUniformMat4("proj", proj);
@@ -1147,7 +1198,7 @@ void App::paintGL() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   mat4 modelView;
   mat4 proj;
-  proj.perspective(fov, float(width()) / height(), 0.5, 700.);
+  proj.perspective(fov, float(width()) / height(), 0.5, 900.);
 
   btVector3 chassisPosGoal = vehicle->getChassisWorldTransform().getOrigin();
   chassisPos = chassisPos.lerp(chassisPosGoal, delta*0.03);
@@ -1319,13 +1370,46 @@ void App::paintGL() {
   
   glActiveTexture(GL_TEXTURE0);
 
-  QFont font("Chicken Butt");
-  font.setPointSize(42);
-  glColor3f(0,0,0);
-  renderText(50,50, "The Fps: " + fps, font);
+  if (infoShown) {
+    glColor3f(0,0,0);
+    renderText(50,50, "The Fps: " + fps, infoFont);
+  }
+
+  if (state == Counting) {
+    renderText(width()/2, height()/2, QString("%1").arg(3 - int(trackTimer->elapsed())/1000), hudFont);
+    if (trackTimer->elapsed() > 3000) {
+      trackTimer->restart();
+      state = Racing;
+    }
+  }
+
+  if (state == App::Racing) {
+    glColor3f(0,0,0);
+    renderText(width()-400, 50, QString("Time: %1s").arg(trackTimer->elapsed() / 1000.), timeFont);
+    btVector3 goalPos(10, -70, 0); // TODO: find aabb
+    if ((chassisPos*btVector3(1,1,0) - goalPos).length() < 20) {
+      state = Highscore;
+      chassis->setLinearVelocity(btVector3(0,0,0));
+      chassis->setAngularVelocity(btVector3(0,0,0));
+      highscore << QPair<QString, qint64>("anonymous", trackTimer->elapsed());
+      QFile file(highscoreFilename);
+      file.open(QIODevice::WriteOnly);
+      QDataStream out(&file);
+      out << highscore;
+      file.close();
+    }
+  }
+
+  if (state == Highscore) {
+    glColor3f(0,0,0);
+    renderText(width()/2-100, 100, "Highscore", timeFont);
+    for (int i = 0; i < highscore.size(); ++i) {
+      renderText(width()/2 - 200, 150+i*40, QString("%1 %2s").arg(highscore.at(i).first).arg(highscore.at(i).second / 1000.),
+        highscoreFont);
+    }
+  }
 
   framesDrawn++;
-
   update();
 }
 
@@ -1339,6 +1423,9 @@ void App::resizeGL(int width, int height) {
 }
 
 void App::keyPressEvent(QKeyEvent* event) {
+  if (state == Counting)
+    return;
+
   switch (event->key()) {
     case Qt::Key_Escape:
       this->parentWidget()->close();
@@ -1378,6 +1465,9 @@ void App::keyPressEvent(QKeyEvent* event) {
     case Qt::Key_L:
       shadows = !shadows;
       break;
+    case Qt::Key_I:
+      infoShown = !infoShown;
+      break;
 
     case Qt::Key_Backspace: { // HAHA: jump case label error is just weird even for C++
       btTransform transform;
@@ -1388,6 +1478,8 @@ void App::keyPressEvent(QKeyEvent* event) {
       chassis->setLinearVelocity(btVector3(0,0,0));
       chassis->setAngularVelocity(btVector3(0,0,0));
       vehicleSteering = 0;
+      state = Counting;
+      trackTimer->restart();
       break;
       }
 
@@ -1395,6 +1487,7 @@ void App::keyPressEvent(QKeyEvent* event) {
       btTransform transform;
       transform.setIdentity();
       btVector3 origin = vehicle->getChassisWorldTransform().getOrigin();
+      std::cout << origin.x() << " " << origin.y() << " " << origin.z() << std::endl;
       btVector3 forward = vehicle->getForwardVector();
       forward.setZ(0);
       forward.normalize();
@@ -1408,6 +1501,7 @@ void App::keyPressEvent(QKeyEvent* event) {
       chassis->setLinearVelocity(btVector3(0,0,0));
       chassis->setAngularVelocity(btVector3(0,0,0));
       vehicleSteering = 0;
+      numResets++;
       break;
       }
   }

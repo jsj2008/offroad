@@ -2,7 +2,8 @@
   <attribute name="position" unit="0"></attribute>
   <attribute name="normal" unit="1"></attribute>
   <attribute name="color" unit="2"></attribute>
-
+  <input channel="camera-position" name="camPosition" />
+slkdfj
   <shader type="vertex">
   <![CDATA[
   in vec3 position;
@@ -17,6 +18,7 @@
   uniform mat4 bias;
   uniform mat4 shadowProj;
   uniform mat4 shadowModelView;
+  uniform vec3 camPosition;
  
   void main() {
     gl_Position = proj * modelView * vec4(position, 1);

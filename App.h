@@ -11,6 +11,8 @@
 
 #include <vehicle/btRaycastVehicle.h>
 
+const QString highscoreFilename = "highscore";
+
 class FirstPersonCamera;
 class Renderer;
 class Mesh;
@@ -63,10 +65,15 @@ private:
       texture1 = NULL;
       texture2 = NULL;
       texture3 = NULL;
+      texture4 = NULL;
       shader = NULL;
       body = NULL;
       ghost = false;
       transparent = false;
+    }
+
+    bool operator < (const BlenderScene::RenderableObject& other) const {
+      return shader < other.shader; // Comparing addresses (really simple way to sort objects by shaders).
     }
 
     Mesh* mesh;
@@ -74,6 +81,7 @@ private:
     Texture* texture1;
     Texture* texture2;
     Texture* texture3;
+    Texture* texture4;
     Shader* shader;
     btRigidBody* body;
     QString name;
@@ -172,6 +180,23 @@ private:
   bool accelerating, breaking, steeringLeft, steeringRight;
   float engineForce, breakingForce, vehicleSteering;
   const float maxSteering;
+
+  QFont infoFont;
+  QFont hudFont;
+  QFont timeFont;
+  QFont highscoreFont;
+  bool infoShown;
+  QElapsedTimer* trackTimer;
+  int state;
+  int numResets;
+
+  enum State {
+    Counting,
+    Racing,
+    Highscore
+  };
+
+  QList<QPair<QString, qint64> > highscore;
 };
 
 class PointerSlider : public QSlider {
