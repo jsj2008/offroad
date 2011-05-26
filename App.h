@@ -197,6 +197,9 @@ private:
   };
 
   QList<QPair<QString, qint64> > highscore;
+
+  Texture* speedometerBack;
+  Texture* speedometerFront;
 };
 
 class PointerSlider : public QSlider {

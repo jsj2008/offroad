@@ -66,6 +66,11 @@ private:
 };
 
 class Texture {
+public:
+  GLuint getID() const {
+    return id;
+  }
+
 private:
   friend class Renderer;
   GLuint id;
@@ -582,6 +587,10 @@ App::~App() {
     delete trackTimer;
 }
 
+bool scoreLessThan(const QPair<QString, qint64>& s1, const QPair<QString, qint64>& s2) {
+  return s1.second < s2.second;
+}
+
 void App::initializeGL() {
   this->setWindowTitle("Monster Truck TODO 2");
   this->setMouseTracking(true);
@@ -639,6 +648,8 @@ void App::initializeGL() {
     scattering = renderer->addShader("content/scattering.shader");
     blur = renderer->addShader("content/blur.shader");
     plain = renderer->addShader("content/plain.shader");
+    speedometerBack = renderer->addTexture("content/speedometer-back.png");
+    speedometerFront = renderer->addTexture("content/speedometer-front.png");
 
     this->setupPhysics();
 
@@ -746,6 +757,7 @@ void App::initializeGL() {
   QDataStream in(&file);
   in >> highscore;
   file.close();
+  qSort(highscore.begin(), highscore.end(), scoreLessThan);
 
   hudFont = QFont("Chicken Butt");
   timeFont = QFont("Chicken Butt");
@@ -1249,61 +1261,6 @@ void App::paintGL() {
 
   scene->draw(delta, proj, modelView, shadowDepthTexture, vehicle);
 
-/*
-  renderer->setShader(scattering);
-
-  const float PI = M_PI;
-	const float kr = 0.0025f;		// Rayleigh scattering constant
-	const float kr_4pi = kr*4.0f*PI;
-	const float km = 0.0010f;		// Mie scattering constant
-	const float km_4pi = km*4.0f*PI;
-	const float e_sun = 20.0f;		// Sun brightness constant
-	const float g = -0.990f;		// The Mie phase asymmetry factor
-	//const float exposure = 2.0f;
-
-	const float inner_radius = 200;
-	const float outer_radius = inner_radius*1.025;
-
-  vec3 wave_length = vec3(0.650, 0.570, 0.475);
-  wave_length *= wave_length * wave_length * wave_length;
-  vec3 inv_wave_length = vec3(1 / wave_length.x(), 1 / wave_length.y(), 1 / wave_length.z());
-
-	const float rayleigh_scale_depth = 0.25f;
-	//const float mie_scale_depth = 0.1f;
-
-  vec3 lightDir = vec3(0, 1000, 0).normalized();
-  vec3 cam_pos = cam->getPosition();
-  //std::cout << cam_pos.x() << " " << cam_pos.y() << " " << cam_pos.z() << std::endl;
-
-  renderer->setUniform("cam_pos", cam_pos);
-  renderer->setUniform("light_dir", lightDir);
-	renderer->setUniform("inv_wave_length", inv_wave_length);
-	renderer->setUniform("cam_height", (cam_pos + vec3(0,inner_radius,0)).length());
-	renderer->setUniform("inner_radius", inner_radius);
-	renderer->setUniform("inner_radius_2", inner_radius*inner_radius);
-	renderer->setUniform("outer_radius", outer_radius);
-	renderer->setUniform("outer_radius_2", outer_radius*outer_radius);
-	renderer->setUniform("kr_e_sun", kr*e_sun);
-	renderer->setUniform("km_e_sun", km*e_sun);
-	renderer->setUniform("kr_4pi", kr_4pi);
-	renderer->setUniform("km_4pi", km_4pi);
-	renderer->setUniform("scale", 1.0f / (outer_radius - inner_radius));
-	renderer->setUniform("scale_depth", rayleigh_scale_depth);
-	renderer->setUniform("scale_over_scale_depth", (1.0f / (outer_radius - inner_radius)) / rayleigh_scale_depth);
-	renderer->setUniform("g", g);
-	renderer->setUniform("g_2", g*g);
-*/
-  //glPushMatrix();
-
-  //glTranslatef(0,-inner_radius, 0);
-
-  /*GLUquadric* pSphere = gluNewQuadric();
-	gluSphere(pSphere, outer_radius, 100, 50);
-	gluDeleteQuadric(pSphere);*/
-  /*glScalef(1,1,1);
-  renderer->drawMesh(skyDome);*/
-  //glPopMatrix();
-
   if (blurEnabled) {
     glPopAttrib();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1367,8 +1324,10 @@ void App::paintGL() {
   }
 
   previousModelView = modelView;
-  
-  glActiveTexture(GL_TEXTURE0);
+
+
+  glActiveTexture(GL_TEXTURE0); // This line was added after hours of painful debugging.
+
 
   if (infoShown) {
     glColor3f(0,0,0);
@@ -1386,12 +1345,60 @@ void App::paintGL() {
   if (state == App::Racing) {
     glColor3f(0,0,0);
     renderText(width()-400, 50, QString("Time: %1s").arg(trackTimer->elapsed() / 1000.), timeFont);
-    btVector3 goalPos(10, -70, 0); // TODO: find aabb
+
+    glDisable(GL_DEPTH_TEST);
+    renderer->disableShaders();
+    glViewport(0,0, this->width(), this->height());
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0,width(),0,height(),0,1);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    glActiveTexture(GL_TEXTURE0 + 0);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, speedometerBack->getID());
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    int size = 200;
+    glColor3f(1,1,1);
+    glTranslatef(width()-220, 30, 0);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0,0); glVertex2f(0, 0);
+    glTexCoord2f(0,1); glVertex2f(0, size);
+    glTexCoord2f(1,1); glVertex2f(size, size);
+    glTexCoord2f(1,0); glVertex2f(size, 0);
+    glEnd();
+
+    glBindTexture(GL_TEXTURE_2D, speedometerFront->getID());
+
+    glLoadIdentity();
+    glTranslatef(width()-220, 30, 0);
+    glTranslatef(size/2, size*0.4375, 0);
+    glRotatef(-vehicle->getCurrentSpeedKmHour()+5, 0,0,1);
+    glTranslatef(-size/2, -size*0.4375, 0);
+    glColor3f(1,1,1);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0,0); glVertex2f(0, 0);
+    glTexCoord2f(0,1); glVertex2f(0, size);
+    glTexCoord2f(1,1); glVertex2f(size, size);
+    glTexCoord2f(1,0); glVertex2f(size, 0);
+    glEnd();
+
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+
+    btVector3 goalPos(10, -70, 0); // TODO: rather find aabb
     if ((chassisPos*btVector3(1,1,0) - goalPos).length() < 20) {
       state = Highscore;
       chassis->setLinearVelocity(btVector3(0,0,0));
       chassis->setAngularVelocity(btVector3(0,0,0));
-      highscore << QPair<QString, qint64>("anonymous", trackTimer->elapsed());
+      qint64 score = trackTimer->elapsed();
+      int index = 0;
+      while (index < highscore.size() && highscore.at(index).second < score)
+        index++;
+      highscore.insert(index, QPair<QString, qint64>("anonymous", trackTimer->elapsed()));
       QFile file(highscoreFilename);
       file.open(QIODevice::WriteOnly);
       QDataStream out(&file);
