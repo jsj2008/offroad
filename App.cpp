@@ -1269,7 +1269,7 @@ void App::paintGL() {
     renderer->setShader(blur);
     renderer->setUniformMat4("previousModelView", previousModelView);
     renderer->setUniformMat4("proj", ctx.projection);
-    renderer->setUniformMat4("modelViewInverse", modelView.inverted());
+    renderer->setUniformMat4("modelViewInverse", ctx.modelView.inverted());
     renderer->setUniformMat4("projInverse", ctx.projection.inverted());
     glActiveTexture(GL_TEXTURE0 + 0);
     glBindTexture(GL_TEXTURE_2D, colorBuffer);
@@ -1299,7 +1299,7 @@ void App::paintGL() {
     }
 
     DebugDrawer* dd = static_cast<DebugDrawer*>(dynamicsWorld->getDebugDrawer());
-    dd->setModelViewProj(modelView, ctx.projection);
+    dd->setModelViewProj(ctx.modelView, ctx.projection);
     if (drawAabb)
       dd->setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawAabb);
     else
@@ -1314,7 +1314,7 @@ void App::paintGL() {
     }
   }
 
-  previousModelView = modelView;
+  previousModelView = ctx.modelView;
 
   glActiveTexture(GL_TEXTURE0); // This line was added after hours of painful debugging.
 
@@ -1515,7 +1515,6 @@ void App::keyPressEvent(QKeyEvent* event) {
       btTransform transform;
       transform.setIdentity();
       btVector3 origin = vehicle->getChassisWorldTransform().getOrigin();
-      std::cout << origin.x() << " " << origin.y() << " " << origin.z() << std::endl;
       btVector3 forward = vehicle->getForwardVector();
       forward.setZ(0);
       forward.normalize();
