@@ -10,9 +10,9 @@
 #include <QDomElement>
 #include <QList>
 
-#define BUFFER_OFFSET(i) ((char *)NULL + (i))
-
 #include <FirstPersonCamera.h>
+
+#include <sys/resource.h> // TODO: other platforms
 
 class load_exception : public std::runtime_error {
 public:
@@ -22,11 +22,11 @@ public:
 };
 
 template <class T>
-T clamp(const T& value, const T& low, const T& high) {
+inline T clamp(const T& value, const T& low, const T& high) {
   return value < low ? low : (value > high ? high : value);
 }
 
-vec3 btToQt(const btVector3& v) {
+inline vec3 btToQt(const btVector3& v) {
   return vec3(v.x(), v.y(), v.z());
 }
 
@@ -45,7 +45,7 @@ void checkErrors() {
   }
 }
 
-mat4 toMat4(const btScalar* columnMajor) {
+inline mat4 toMat4(const btScalar* columnMajor) {
   qreal mat[16];
   for (int i = 0; i < 16; ++i) mat[i] = columnMajor[i];
   return mat4(mat).transposed();
@@ -67,7 +67,7 @@ private:
 
 class Texture {
 public:
-  GLuint getID() const {
+  GLuint getID() const { // TODO: this should not be necessary
     return id;
   }
 
@@ -259,7 +259,7 @@ public:
     return buffer;
   }
 
-  Texture* addTexture(const char* fileName) {
+  Texture* addTexture(const char* fileName) { // TODO: more params!
     QString fullPath = QFileInfo(fileName).absoluteFilePath();
     if (loadedTextures.contains(fullPath))
       return loadedTextures[fullPath];
@@ -326,8 +326,7 @@ public:
   }
 
   void setShader(Shader* shader) {
-    // TODO: assert
-    if (shader != currentShader) {
+    if (shader != currentShader && shader != NULL) {
       glUseProgram(shader->program);
       currentProgram = shader->program;
       currentShader = shader;
@@ -341,7 +340,7 @@ public:
   void disableShaders() {
     glUseProgram(0);
     currentProgram = 0;
-    currentShader = 0; // TODO: nullptr?
+    currentShader = NULL; // TODO: nullptr?
   }
 
   void setUniform1i(const char* name, int value) {
@@ -369,7 +368,7 @@ public:
   }
 
   void setUniformMat4(const char* name, const mat4& value) {
-    GLfloat mat[4*4]; // TODO: this assumes sizeof qreal == sizeof double
+    GLfloat mat[4*4];
     const qreal* data = value.constData();
     for (int i = 0; i < 16; ++i)
       mat[i] = data[i];
@@ -668,22 +667,12 @@ void App::initializeGL() {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_MULTISAMPLE);
 
-  rttWidth = 1024;
-  rttHeight = 768;
-
   glGenFramebuffers(1, &fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-/*
-  glGenRenderbuffers(1, &depthBuffer);
-  glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, rttWidth, rttHeight);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer);*/
 
   glGenTextures(1, &colorBuffer);
   glBindTexture(GL_TEXTURE_2D, colorBuffer);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, rttWidth, rttHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, RTT_WIDTH, RTT_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -696,25 +685,22 @@ void App::initializeGL() {
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, rttWidth, rttHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, RTT_WIDTH, RTT_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
   glBindTexture(GL_TEXTURE_2D, 0);
 
   // TODO: this is just weird
   glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depthTexture, 0);
 
   GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-
   if (GL_FRAMEBUFFER_COMPLETE != status) {
     std::cout << "There was an error completing the FBO setup!" << std::endl;
     this->parentWidget()->close();
     return;
   }
+
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   // Build another FBO for shadows.
-  shadowMapWidth = 512;
-  shadowMapHeight = 512;
-	
   glGenTextures(1, &shadowDepthTexture);
   glBindTexture(GL_TEXTURE_2D, shadowDepthTexture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -722,7 +708,7 @@ void App::initializeGL() {
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, shadowMapWidth, shadowMapHeight, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
   glBindTexture(GL_TEXTURE_2D, 0);
 
   glGenFramebuffers(1, &shadowFbo);
@@ -744,15 +730,16 @@ void App::initializeGL() {
 
   checkErrors();
 
-  if (!QFile::exists(highscoreFilename)) {
-    QFile file(highscoreFilename);
+  // Load highscore.
+  if (!QFile::exists(HIGHSCORE_FILENAME)) {
+    QFile file(HIGHSCORE_FILENAME);
     file.open(QIODevice::WriteOnly);
     QDataStream out(&file);
     out << highscore;
     file.close();
   }
 
-  QFile file(highscoreFilename);
+  QFile file(HIGHSCORE_FILENAME);
   file.open(QIODevice::ReadOnly);
   QDataStream in(&file);
   in >> highscore;
@@ -770,6 +757,16 @@ void App::initializeGL() {
   renderText(0,0, "Initializing font", hudFont);
   renderText(0,0, "Initializing another font", timeFont);
   renderText(0,0, "Otherwise there would be a hickup", highscoreFont);
+
+  mat4 projection, sunProjection;
+  projection.perspective(fov, float(width()) / height(), 0.5, 900.);
+  sunProjection.ortho(-3, 3, -3, 3, -10, 100);
+  ctx.projection = projection;
+  ctx.sunProjection = sunProjection;
+  ctx.sunDirection = vec3(0,1,3).normalized();
+
+  ctx.frustumCulling = true;
+  ctx.depthBuffer = shadowDepthTexture;
 
   state = App::Counting;
   std::cout << "Init complete!" << std::endl;
@@ -1002,36 +999,28 @@ BlenderScene::~BlenderScene() {
   delete importer;
 }
 
-void BlenderScene::draw(qint64 delta,
-    const mat4& proj,
-    const mat4& modelView,
-    GLuint depthTexture, // TODO: refactor this ASAP
-    btRaycastVehicle* vehicle) {
-
-  mat4 lightModelView;
-  mat4 lightProj;
-  lightProj.ortho(-3, 3, -3, 3, -10, 100);
-
-  btVector3 center = vehicle->getChassisWorldTransform().getOrigin();
-  vec3 cen = vec3(center.x(), center.y(), center.z());
-  lightModelView.lookAt(
-    cen + vec3(10, 10, 10),
-    cen,
-    vec3(0,1,0));
-
+void BlenderScene::draw(qint64 delta, RenderContext& ctx) {
   const GLfloat bias[16] = {
     0.5, 0.0, 0.0, 0.0,
     0.0, 0.5, 0.0, 0.0,
     0.0, 0.0, 0.5, 0.0,
     0.5, 0.5, 0.5, 1.0};
 
-  for (int i = 0; i < objects.size(); ++i) {
-    RenderableObject object = objects.at(i);
+  ctx.objectsDrawn = 0;
 
-    // TODO: put objects into some kind of space tree
+  for (int i = 0; i < objects.size(); ++i) {
+    const RenderableObject& object = objects.at(i);
 
     if (object.shader == NULL || object.mesh == NULL)
       continue;
+
+    if (ctx.frustumCulling && object.body != NULL) {
+      btVector3 aabbMin, aabbMax;
+      object.body->getAabb(aabbMin, aabbMax); // TODO: aabb caching?
+
+      if (!ctx.viewFrustum.containsAabb(aabbMin, aabbMax))
+        continue;
+    }
 
     if (object.transparent) {
       //glEnable(GL_BLEND);
@@ -1054,7 +1043,7 @@ void BlenderScene::draw(qint64 delta,
     if (object.texture4 != NULL)
       renderer->setTexture("texture4", object.texture4, 4);
 
-    mat4 modelViewTop = modelView;
+    mat4 modelViewTop = ctx.modelView;
     mat4 model;
 
     if (object.body != NULL) {
@@ -1075,18 +1064,16 @@ void BlenderScene::draw(qint64 delta,
 
     // TODO: this overrides sixth unit, make this more general
     glActiveTexture(GL_TEXTURE0 + 5);
-    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    glBindTexture(GL_TEXTURE_2D, ctx.depthBuffer);
     renderer->setUniform1i("depth", 5);
     renderer->setUniform4fv("bias", bias);
-    renderer->setUniformMat4("shadowProj", lightProj);
-    renderer->setUniformMat4("shadowModelView", lightModelView);
-    renderer->setUniformMat4("model", model);
+    renderer->setUniformMat4("shadowProj", ctx.sunProjection);
+    renderer->setUniformMat4("shadowModelView", ctx.sunModelView);
 
-    // TODO: lighty light
-    vec3 light_dir = vec3(0,1,3).normalized();
-    renderer->setUniform3f("light_dir", light_dir);
-    renderer->setUniformMat4("proj", proj);
+    renderer->setUniform3f("light_dir", ctx.sunDirection);
+    renderer->setUniformMat4("proj", ctx.projection);
     renderer->setUniformMat4("modelView", modelViewTop);
+    renderer->setUniformMat4("model", model);
     renderer->drawMesh(object.mesh);
 
     if (object.transparent) {
@@ -1094,7 +1081,11 @@ void BlenderScene::draw(qint64 delta,
       //glDisable(GL_BLEND);
       //glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
     }
+
+    ctx.objectsDrawn++;
   }
+
+  // TODO: diagnostics
 }
 
 void App::cleanUpPhysics() {
@@ -1109,8 +1100,8 @@ void App::updatePhysics(qint64 delta) {
     engineForce = 0;
 
   float speed = vehicle->getCurrentSpeedKmHour();
-  float fovGoal = 75 + speed / 2;
-  fov += (fovGoal - fov)*0.1;
+  //float fovGoal = 75 + speed / 2;
+  //fov += (fovGoal - fov)*0.1;
 
   if (breaking) {
     if (speed < 0.1) {
@@ -1157,21 +1148,19 @@ void App::paintGL() {
   if (shadows) {
     glBindFramebuffer(GL_FRAMEBUFFER, shadowFbo);
     glPushAttrib(GL_VIEWPORT_BIT);
-    glViewport(0,0, shadowMapWidth, shadowMapHeight);
+    glViewport(0,0, SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT);
     glClear(GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
-    mat4 modelView;
-    mat4 proj;
+    mat4 sunModelView;
     vec3 center = btToQt(vehicle->getChassisWorldTransform().getOrigin());
-    modelView.lookAt(
+    sunModelView.lookAt(
       center + vec3(10, 10, 10),
       center,
       vec3(0,1,0));
-    proj.ortho(-3, 3, -3, 3, -10, 100);
-
-    mat4 modelViewTop = modelView;
+    ctx.sunModelView = sunModelView;
+    mat4 modelViewTop = sunModelView;
 
     renderer->setShader(plain);
 
@@ -1181,14 +1170,14 @@ void App::paintGL() {
     modelViewTop.rotate(90, vec3(1,0,0));
     modelViewTop.rotate(180, vec3(0,1,0));
     modelViewTop.scale(0.35, 0.35, 0.35);
-    renderer->setUniformMat4("proj", proj);
+    renderer->setUniformMat4("proj", ctx.sunProjection);
     renderer->setUniformMat4("modelView", modelViewTop);
     renderer->drawMesh(truck);
 
     for (int i = 0; i < vehicle->getNumWheels(); ++i) {
       vehicle->updateWheelTransform(i, true);
       vehicle->getWheelInfo(i).m_worldTransform.getOpenGLMatrix(matrix);
-      modelViewTop = modelView;
+      modelViewTop = sunModelView;
       modelViewTop *= toMat4(matrix);
       modelViewTop.scale(0.4, 0.3, 0.3);
       renderer->setUniformMat4("modelView", modelViewTop);
@@ -1203,14 +1192,12 @@ void App::paintGL() {
   if (blurEnabled) {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glPushAttrib(GL_VIEWPORT_BIT);
-    glViewport(0,0, rttWidth, rttHeight);
+    glViewport(0,0, RTT_WIDTH, RTT_HEIGHT);
   }
 
   glEnable(GL_DEPTH_TEST);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   mat4 modelView;
-  mat4 proj;
-  proj.perspective(fov, float(width()) / height(), 0.5, 900.);
 
   btVector3 chassisPosGoal = vehicle->getChassisWorldTransform().getOrigin();
   chassisPos = chassisPos.lerp(chassisPosGoal, delta*0.03);
@@ -1228,6 +1215,7 @@ void App::paintGL() {
   else
     cam->setTransform(delta / 100., modelView);
 
+  ctx.viewFrustum.update((ctx.projection * modelView).transposed());
   mat4 modelViewTop = modelView;
 
   renderer->setShader(diffuse);
@@ -1239,7 +1227,7 @@ void App::paintGL() {
   modelViewTop.rotate(90, vec3(1,0,0));
   modelViewTop.rotate(180, vec3(0,1,0));
   modelViewTop.scale(0.35, 0.35, 0.35);
-  renderer->setUniformMat4("proj", proj);
+  renderer->setUniformMat4("proj", ctx.projection);
   renderer->setUniformMat4("modelView", modelViewTop);
   renderer->drawMesh(truck);
 
@@ -1254,19 +1242,21 @@ void App::paintGL() {
     modelViewTop = modelView;
     modelViewTop *= toMat4(matrix);
     modelViewTop.scale(0.4, 0.3, 0.3);
-    renderer->setUniformMat4("proj", proj);
+    renderer->setUniformMat4("proj", ctx.projection);
     renderer->setUniformMat4("modelView", modelViewTop);
     renderer->drawMesh(wheel);
   }
 
-  scene->draw(delta, proj, modelView, shadowDepthTexture, vehicle);
+  ctx.modelView = modelView;
+  scene->draw(delta, ctx);
 
+  // Post processing + HUD.
   if (blurEnabled) {
     glPopAttrib();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glClear(GL_COLOR_BUFFER_BIT);
-    glViewport(0,0, this->width(), this->height());
+    glViewport(0,0, width(), height());
     glMatrixMode(GL_PROJECTION); // TODO: this must also go
     glLoadIdentity();
     glOrtho(-1,1,-1,1,-1,1);
@@ -1275,11 +1265,12 @@ void App::paintGL() {
 
     //glDepthMask(GL_FALSE);
     glDisable(GL_DEPTH_TEST);
+
     renderer->setShader(blur);
     renderer->setUniformMat4("previousModelView", previousModelView);
-    renderer->setUniformMat4("proj", proj);
+    renderer->setUniformMat4("proj", ctx.projection);
     renderer->setUniformMat4("modelViewInverse", modelView.inverted());
-    renderer->setUniformMat4("projInverse", proj.inverted());
+    renderer->setUniformMat4("projInverse", ctx.projection.inverted());
     glActiveTexture(GL_TEXTURE0 + 0);
     glBindTexture(GL_TEXTURE_2D, colorBuffer);
     renderer->setUniform1i("color", 0);
@@ -1308,7 +1299,7 @@ void App::paintGL() {
     }
 
     DebugDrawer* dd = static_cast<DebugDrawer*>(dynamicsWorld->getDebugDrawer());
-    dd->setModelViewProj(modelView, proj);
+    dd->setModelViewProj(modelView, ctx.projection);
     if (drawAabb)
       dd->setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawAabb);
     else
@@ -1325,13 +1316,12 @@ void App::paintGL() {
 
   previousModelView = modelView;
 
-
   glActiveTexture(GL_TEXTURE0); // This line was added after hours of painful debugging.
-
 
   if (infoShown) {
     glColor3f(0,0,0);
-    renderText(width()-100, 20, "The Fps: " + fps, infoFont);
+    renderText(width()-150, 10, "The Fps: " + fps, infoFont);
+    renderText(width()-150, 20, "Objects drawn: " + QString("%1").arg(ctx.objectsDrawn), infoFont);
   }
 
   if (state == Counting) {
@@ -1342,7 +1332,7 @@ void App::paintGL() {
     }
   }
 
-  if (state == App::Racing) {
+  if (state == App::Racing) { // TODO: use textures to draw HUD instead
     glDisable(GL_DEPTH_TEST);
     renderer->disableShaders();
     glViewport(0,0, this->width(), this->height());
@@ -1427,7 +1417,7 @@ void App::paintGL() {
       while (index < highscore.size() && highscore.at(index).second < score)
         index++;
       highscore.insert(index, QPair<QString, qint64>("anonymous", trackTimer->elapsed()));
-      QFile file(highscoreFilename);
+      QFile file(HIGHSCORE_FILENAME);
       file.open(QIODevice::WriteOnly);
       QDataStream out(&file);
       out << highscore;
@@ -1502,6 +1492,9 @@ void App::keyPressEvent(QKeyEvent* event) {
       break;
     case Qt::Key_I:
       infoShown = !infoShown;
+      break;
+    case Qt::Key_O:
+      ctx.frustumCulling = !ctx.frustumCulling;
       break;
 
     case Qt::Key_Backspace: { // HAHA: jump case label error is just weird even for C++
@@ -1664,6 +1657,9 @@ void ConfigurationWindow::addPointerValue(const char* name, float* var, float mi
 }
 
 int main(int argc, char** args) {
+  int ret = setpriority(PRIO_PROCESS, getpid(), -20); // TODO: this doesn't seem to have any effect
+  std::cout << "Changed priority to -20: " << (ret == 0) << std::endl;
+
   QApplication qapp(argc, args);
   QGLFormat format;
   format.setSampleBuffers(false);

@@ -11,7 +11,13 @@
 
 #include <vehicle/btRaycastVehicle.h>
 
-const QString highscoreFilename = "highscore";
+const QString HIGHSCORE_FILENAME = "highscore";
+const int RTT_WIDTH = 1024;
+const int RTT_HEIGHT = 768;
+const int SHADOWMAP_WIDTH = 512;
+const int SHADOWMAP_HEIGHT = 512;
+
+#define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
 class FirstPersonCamera;
 class Renderer;
@@ -46,18 +52,99 @@ public:
   virtual int getDebugMode() const;
 };
 
+// Frustum culling by Humus (http://www.humus.name/).
+class Frustum {
+public:
+  Frustum() {}
+  Frustum(const mat4& mvp) {
+    update(mvp);
+  };
+ 
+  void update(const mat4& mvp) {
+    const qreal* data = mvp.constData();
+    planes[FrustumLeft  ] = Plane(data[12] - data[0], data[13] - data[1], data[14] - data[2],  data[15] - data[3]);
+    planes[FrustumRight ] = Plane(data[12] + data[0], data[13] + data[1], data[14] + data[2],  data[15] + data[3]);
+
+    planes[FrustumTop   ] = Plane(data[12] - data[4], data[13] - data[5], data[14] - data[6],  data[15] - data[7]);
+    planes[FrustumBottom] = Plane(data[12] + data[4], data[13] + data[5], data[14] + data[6],  data[15] + data[7]);
+
+    planes[FrustumFar   ] = Plane(data[12] - data[8], data[13] - data[9], data[14] - data[10], data[15] - data[11]);
+    planes[FrustumNear  ] = Plane(data[12] + data[8], data[13] + data[9], data[14] + data[10], data[15] + data[11]);
+  }
+
+  bool containsAabb(const btVector3& aabbMin, const btVector3& aabbMax) {
+    float minX = aabbMin.x();
+    float minY = aabbMin.y();
+    float minZ = aabbMin.z();
+    float maxX = aabbMax.x();
+    float maxY = aabbMax.y();
+    float maxZ = aabbMax.z();
+
+    for (int i = 0; i < 6; ++i) {
+      if (planes[i].dist(btVector3(minX, minY, minZ)) > 0) continue;
+      if (planes[i].dist(btVector3(minX, minY, maxZ)) > 0) continue;
+      if (planes[i].dist(btVector3(minX, maxY, minZ)) > 0) continue;
+      if (planes[i].dist(btVector3(minX, maxY, maxZ)) > 0) continue;
+      if (planes[i].dist(btVector3(maxX, minY, minZ)) > 0) continue;
+      if (planes[i].dist(btVector3(maxX, minY, maxZ)) > 0) continue;
+      if (planes[i].dist(btVector3(maxX, maxY, minZ)) > 0) continue;
+      if (planes[i].dist(btVector3(maxX, maxY, maxZ)) > 0) continue;
+        return false;
+    }
+    return true;
+  }
+
+private:
+  enum FrustumPlane {
+    FrustumLeft,
+    FrustumRight,
+    FrustumTop,
+    FrustumBottom,
+    FrustumFar,
+    FrustumNear
+  };
+
+  struct Plane {
+    Plane() {}
+    Plane(float x, float y, float z, float offset) {
+      normal = btVector3(x, y, z);
+      float invLen = 1.0f / normal.length();
+      normal *= invLen;
+      this->offset = offset * invLen;
+    }
+
+    float dist(const btVector3& pos) const {
+      return normal.dot(pos) + offset;
+    }
+
+    btVector3 normal;
+    float offset;
+  };
+
+  Plane planes[6];
+};
+
+struct RenderContext {
+  //vec4 sunDiffuse;
+  vec3 sunDirection;
+  mat4 sunModelView;
+  mat4 sunProjection;
+  mat4 modelView;
+  mat4 projection;
+  GLuint depthBuffer;
+  Frustum viewFrustum;
+  bool frustumCulling;
+  int objectsDrawn;
+};
+
 class BlenderScene {
 public:
   BlenderScene(const char* fileName, btDynamicsWorld* world, Renderer* renderer);
   ~BlenderScene();
 
-  void draw(qint64 delta, const mat4& proj, const mat4& modelView, GLuint depthTexture, btRaycastVehicle* vehicle);
+  void draw(qint64 delta, RenderContext& ctx);
 
 private:
-  btBulletWorldImporter* importer;
-  btDynamicsWorld* world;
-  Renderer* renderer;
-
   struct RenderableObject {
     RenderableObject() {
       mesh = NULL; // TODO: nulptr?
@@ -90,6 +177,9 @@ private:
     btTransform transform;
   };
 
+  btBulletWorldImporter* importer;
+  btDynamicsWorld* world;
+  Renderer* renderer;
   QList<RenderableObject> objects;
 };
 
@@ -116,6 +206,7 @@ private:
   void updatePhysics(qint64 delta);
   void cleanUpPhysics();
 
+  RenderContext ctx;
   int framesDrawn;
   QString fps;
   QTimer* fpsTimer;
@@ -131,11 +222,10 @@ private:
   Shader* scattering;
 
   GLuint fbo;
-  GLuint depthBuffer;
+  //GLuint depthBuffer;
   GLuint depthTexture;
   GLuint colorBuffer;
 
-  int rttWidth, rttHeight;
   Shader* blur;
   bool blurEnabled;
   mat4 previousModelView;
