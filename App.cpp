@@ -1298,6 +1298,8 @@ void App::paintGL() {
       glLineStipple(1, 0x00FF);
     }
 
+    glColor3f(1,1,1);
+
     DebugDrawer* dd = static_cast<DebugDrawer*>(dynamicsWorld->getDebugDrawer());
     dd->setModelViewProj(ctx.modelView, ctx.projection);
     if (drawAabb)
@@ -1496,6 +1498,9 @@ void App::keyPressEvent(QKeyEvent* event) {
     case Qt::Key_O:
       ctx.frustumCulling = !ctx.frustumCulling;
       break;
+    case Qt::Key_F1:
+      grabFrameBuffer().save("screenshot.jpg", 0, 95);
+      break;
 
     case Qt::Key_Backspace: { // HAHA: jump case label error is just weird even for C++
       btTransform transform;
@@ -1656,7 +1661,7 @@ void ConfigurationWindow::addPointerValue(const char* name, float* var, float mi
 }
 
 int main(int argc, char** args) {
-  int ret = setpriority(PRIO_PROCESS, getpid(), -20); // TODO: this doesn't seem to have any effect
+  int ret = setpriority(PRIO_PROCESS, getpid(), -20); // TODO: this doesn't seem to have any effect. Of course it doesn't, it's the only process (almost).
   std::cout << "Changed priority to -20: " << (ret == 0) << std::endl;
 
   QApplication qapp(argc, args);

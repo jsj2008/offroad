@@ -125,7 +125,6 @@ private:
 };
 
 struct RenderContext {
-  //vec4 sunDiffuse;
   vec3 sunDirection;
   mat4 sunModelView;
   mat4 sunProjection;
