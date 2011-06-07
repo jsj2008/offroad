@@ -1,4 +1,4 @@
-TARGET = Offroad
+TARGET = Monster
 SOURCES = App.cpp \
     btBulletWorldImporter.cpp \
     BulletFileLoader/bChunk.cpp \

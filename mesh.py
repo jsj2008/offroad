@@ -1,20 +1,90 @@
 bl_addon_info = {
 "name": "MESH Export",
 "author": "Matej Drame",
-"version": (0, 2),
-"blender": (2, 5, 6),
-"api": 32412,
-"location": "View3D > File > Export",
+"version": (0, 3),
+"blender": (2, 5, 7),
+"api": 35266,
+"location": "File > Export",
 "description": "Export to .mesh format",
 "warning": "",
-"wiki_url": "http://wiki.blender.org/index.php/Extensions:2.5/Py/Scripts/Import-Export/Raw_Mesh_IO",
-"tracker_url": "https://projects.blender.org/tracker/index.php?func=detail&aid=21733&group_id=153&atid=469",
+"wiki_url": "",
+"tracker_url": "",
 "category": "Import-Export"}
 
 import bpy
 from bpy.props import *
 from struct import pack
 from io import BytesIO
+import os
+
+def export_mesh(obj, scene_path, mesh_name):
+  """
+  // Format:
+  // format version (1 byte)
+  // nVertices (4 bytes)
+  // nIndices (4 bytes)
+  // vertexSize (1 byte)
+  // indexSize (1 byte)
+  // vertexBuffer (nVertices * vertexSize)
+  // indexBuffer (nIndices * indexSize)
+  """
+  #bpy.ops.object.mode_set(mode='EDIT')
+  #bpy.ops.mesh.select_all(action='SELECT')
+  #bpy.ops.mesh.quads_convert_to_tris() # TODO: copy mesh before
+  #bpy.ops.object.mode_set(mode='OBJECT')
+  # TODO: triangulate if necessary
+
+  mesh = obj.data
+  vertices = []
+  flat = False
+  if 'flat' in obj.game.properties and obj.game.properties['flat'].value:
+    flat = True
+  n_uvs = len(mesh.uv_textures)
+  for face_index, face in enumerate(mesh.faces):
+    vertex = [mesh.vertices[face.vertices[0]].co, mesh.vertices[face.vertices[0]].normal]
+    if flat:
+      vertex[1] = face.normal
+    for u in range(n_uvs):
+      uv_data = mesh.uv_textures[u].data
+      coords = uv_data[face_index]
+      vertex.append(coords.uv1)
+    vertices.append(vertex)
+
+    vertex = [mesh.vertices[face.vertices[1]].co, mesh.vertices[face.vertices[1]].normal]
+    if flat:
+      vertex[1] = face.normal
+    for u in range(n_uvs):
+      uv_data = mesh.uv_textures[u].data
+      coords = uv_data[face_index]
+      vertex.append(coords.uv2)
+    vertices.append(vertex)
+
+    vertex = [mesh.vertices[face.vertices[2]].co, mesh.vertices[face.vertices[2]].normal]
+    if flat:
+      vertex[1] = face.normal
+    for u in range(n_uvs):
+      uv_data = mesh.uv_textures[u].data
+      coords = uv_data[face_index]
+      vertex.append(coords.uv3)
+    vertices.append(vertex)
+
+  filepath = os.path.join(os.path.dirname(scene_path), mesh_name)
+  with open(filepath, 'wb') as f:
+    f.write(pack('<I', 2))
+    f.write(pack('<I', len(vertices)))
+    f.write(pack('<I', len(vertices)))
+    vertex_size = sum(len(component)*4 for component in vertices[0])
+    f.write(pack('<I', vertex_size))
+    f.write(pack('<I', 4))
+
+    for v in vertices:
+      f.write(pack('<fff', *v[0]))
+      f.write(pack('<fff', *v[1]))
+      for uv in v[2:]:
+        f.write(pack('<ff', *uv))
+
+    for index in range(len(vertices)):
+      f.write(pack('<I', index))
 
 class MeshExporter(bpy.types.Operator):
   '''Exports to MESH'''
@@ -48,80 +118,11 @@ class MeshExporter(bpy.types.Operator):
     // vertexBuffer (nVertices * vertexSize)
     // indexBuffer (nIndices * indexSize)
     """
-    bio = BytesIO()
-    bpy.ops.object.mode_set(mode='EDIT')
-    bpy.ops.mesh.select_all(action='SELECT')
-    bpy.ops.mesh.quads_convert_to_tris() # TODO: copy mesh before
-    bpy.ops.object.mode_set(mode='OBJECT')
-
     obj = bpy.context.selected_objects[0]
     assert obj.type == 'MESH'
-    mesh = obj.data
-    vertices = [[vertex.co, vertex.normal] for vertex in mesh.vertices]
-    index_vert = len(vertices)
-    indices = []
-    if self.includeCoords:
-      uv_data = mesh.uv_textures[0].data
-      uvs = []
-    for index, face in enumerate(mesh.faces):
-      if not self.includeCoords:
-        indices.extend(face.vertices)
-      else:
-        coords = uv_data[index]
-        vertex = vertices[face.vertices[0]]
-        if len(vertex) == 2:
-          vertex.append(coords.uv1)
-          indices.append(face.vertices[0])
-        elif vertex[2] != coords.uv1:
-          vertex = vertex[:]
-          vertex[2] = coords.uv1
-          vertices.append(vertex)
-          indices.append(index_vert)
-          index_vert += 1
-        else:
-          indices.append(face.vertices[0])
-
-        vertex = vertices[face.vertices[1]]
-        if len(vertex) == 2:
-          vertex.append(coords.uv2)
-          indices.append(face.vertices[1])
-        elif vertex[2] != coords.uv2:
-          vertex = vertex[:]
-          vertex[2] = coords.uv2
-          vertices.append(vertex)
-          indices.append(index_vert)
-          index_vert += 1
-        else:
-          indices.append(face.vertices[1])
-
-        vertex = vertices[face.vertices[2]]
-        if len(vertex) == 2:
-          vertex.append(coords.uv3)
-          indices.append(face.vertices[2])
-        elif vertex[2] != coords.uv3:
-          vertex = vertex[:]
-          vertex[2] = coords.uv3
-          vertices.append(vertex)
-          indices.append(index_vert)
-          index_vert += 1
-        else:
-          indices.append(face.vertices[2])
-
-    with open(self.filepath, 'wb') as f:
-      f.write(pack('<I', 1))              # version
-      f.write(pack('<I', len(vertices)))  # nVertices
-      f.write(pack('<I', len(indices)))   # nIndices
-      f.write(pack('<I', 32 if self.includeCoords else 24))             # vertexSize
-      f.write(pack('<I', 4))              # indexSize
-
-      for v in vertices:
-        f.write(pack('<fff', *v[0]))
-        f.write(pack('<fff', *v[1]))
-        if self.includeCoords:
-          f.write(pack('<ff', *v[2]))
-
-      for index in indices:
-        f.write(pack('<I', index))
+    print('Exporting mesh ' + obj.name)
+    export_mesh(obj, self.filepath, obj.name.split('.')[0] + '.mesh')
+    print('Done')
     return {'FINISHED'}
 
   def invoke(self, context, event):
@@ -135,9 +136,11 @@ def menu_export(self, context):
   self.layout.operator(MeshExporter.bl_idname, text="MESH (.mesh)").filepath = default_path
 
 def register():
+  bpy.utils.register_module(__name__)
   bpy.types.INFO_MT_file_export.append(menu_export)
 
 def unregister():
+  bpy.utils.unregister_module(__name__)
   bpy.types.INFO_MT_file_export.remove(menu_export)
 
 if __name__ == "__main__":

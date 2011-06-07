@@ -12,8 +12,10 @@
 #include <vehicle/btRaycastVehicle.h>
 
 const QString HIGHSCORE_FILENAME = "highscore";
-const int RTT_WIDTH = 1024;
-const int RTT_HEIGHT = 768;
+const int WIN_WIDTH = 800;
+const int WIN_HEIGHT = 600;
+const int RTT_WIDTH = 800;
+const int RTT_HEIGHT = 600;
 const int SHADOWMAP_WIDTH = 512;
 const int SHADOWMAP_HEIGHT = 512;
 
@@ -52,7 +54,7 @@ public:
   virtual int getDebugMode() const;
 };
 
-// Frustum culling by Humus (http://www.humus.name/).
+// Frustum culling, heavily inspired by Humus (http://www.humus.name/).
 class Frustum {
 public:
   Frustum() {}
@@ -96,7 +98,7 @@ public:
 
 private:
   enum FrustumPlane {
-    FrustumLeft,
+    FrustumLeft = 0,
     FrustumRight,
     FrustumTop,
     FrustumBottom,
@@ -187,7 +189,7 @@ class App : public QGLWidget {
 
 public:
   App(const QGLFormat& format, ConfigurationWindow* configWin);
-  ~App();
+  virtual ~App();
 
 private slots:
   void updateFps();
@@ -204,6 +206,7 @@ private:
   void setupPhysics();
   void updatePhysics(qint64 delta);
   void cleanUpPhysics();
+  void drawVehicle(RenderContext& ctx, mat4& modelView, bool shadow=true);
 
   RenderContext ctx;
   int framesDrawn;
@@ -212,16 +215,20 @@ private:
 
   ConfigurationWindow* configWin;
   Renderer* renderer;
+
   Mesh* wheel;
   Mesh* truck;
-  Mesh* skyDome;
+  Mesh* chassisMesh;
+
+  Texture* carTexture;
   Texture* wheelTexture;
-  Shader* diffuse;
-  Shader* diffuseTextured;
-  Shader* scattering;
+
+  Shader* tyre;
+  Shader* chassisShader;
+  Shader* env;
+  Texture* envCubemap;
 
   GLuint fbo;
-  //GLuint depthBuffer;
   GLuint depthTexture;
   GLuint colorBuffer;
 
