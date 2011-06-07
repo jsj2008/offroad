@@ -305,6 +305,46 @@ public:
     return texture;
   }
 
+  Texture* addCubemap(const char** filenames) {
+    GLuint id;
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, id);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    for (int i = 0; i < 6; ++i) {
+      QImage img;
+      QImage glImg;
+
+      if (!img.load(filenames[i])) {
+        QString error = "Error opening ";
+        error += filenames[i];
+        throw load_exception(error);
+      }
+
+      glImg = QGLWidget::convertToGLFormat(img);
+      if(glImg.isNull()) {
+        QString error = "Error converting ";
+        error += filenames[i];
+        error += " to a format OpenGL prefers!";
+        throw load_exception(error);
+      }
+
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, glImg.width(), glImg.height(), 0, GL_RGBA,
+        GL_UNSIGNED_BYTE, glImg.bits());
+    }
+
+    Texture* cubemap = new Texture;
+    cubemap->id = id;
+    // TODO: width/height?
+    textures << cubemap;
+    std::cout << "Loaded cubemap with first texture " << filenames[0] << std::endl;
+    return cubemap;
+  }
+
   IndexBuffer* addIndexBuffer(const char* data, unsigned int sizeInBytes, GLenum hint) {
     GLuint id;
     glGenBuffers(1, &id);
@@ -455,7 +495,7 @@ public:
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer->id);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer->id);
-    // TODO: implement VertexFormat structures
+    // TODO: implement VertexFormat structure
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vertexSize, BUFFER_OFFSET(0));
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, vertexSize, BUFFER_OFFSET(3*4));
@@ -539,6 +579,7 @@ private:
 
 App::App(const QGLFormat& format, ConfigurationWindow* configWin) :
   QGLWidget(format, 0), maxSteering(0.5) {
+  setAttribute(Qt::WA_DeleteOnClose); // TODO: doesn't seem to work
   this->configWin = configWin;
   renderer = NULL;
   cam = NULL;
@@ -561,6 +602,8 @@ App::App(const QGLFormat& format, ConfigurationWindow* configWin) :
 }
 
 App::~App() {
+  std::cout << "Deleting app..." << std::endl; // TODO: not reached
+
   this->cleanUpPhysics();
 
   glDeleteFramebuffersEXT(1, &fbo);
@@ -638,13 +681,30 @@ void App::initializeGL() {
   renderer = new Renderer();
 
   try {
-    wheel = renderer->addMesh("content/wheel.mesh");
-    truck = renderer->addMesh("content/truck.mesh");
-    diffuse = renderer->addShader("content/diffuse.shader");
-    diffuseTextured = renderer->addShader("content/diffuse-textured.shader");
-    wheelTexture = renderer->addTexture("content/truck-tex.jpg");
-    skyDome = renderer->addMesh("content/sky-dome.mesh");
-    scattering = renderer->addShader("content/scattering.shader");
+    wheel =       renderer->addMesh("content/wheel.mesh");
+    truck =       renderer->addMesh("content/truck.mesh");
+    chassisMesh = renderer->addMesh("content/chassis.mesh");
+
+    tyre = renderer->addShader("content/tyre.shader");
+    chassisShader = renderer->addShader("content/chassis.shader");
+    env = renderer->addShader("content/env.shader");
+
+    /*diffuse = renderer->addShader("content/diffuse.shader");
+    diffuseTextured = renderer->addShader("content/diffuse-textured.shader");*/
+    wheelTexture = renderer->addTexture("content/wheel-ambient.jpg");
+    // TODO: car texture
+    //skyDome = renderer->addMesh("content/sky-dome.mesh");
+    //scattering = renderer->addShader("content/scattering.shader");
+
+    const char* cubemap_files[] = {"content/cubemap/1.jpg",
+      "content/cubemap/1.jpg",
+      "content/cubemap/1.jpg",
+      "content/cubemap/1.jpg",
+      "content/cubemap/1.jpg",
+      "content/cubemap/1.jpg",
+      };
+    envCubemap = renderer->addCubemap(cubemap_files);
+
     blur = renderer->addShader("content/blur.shader");
     plain = renderer->addShader("content/plain.shader");
     speedometerBack = renderer->addTexture("content/speedometer-back.png");
@@ -1089,8 +1149,23 @@ void BlenderScene::draw(qint64 delta, RenderContext& ctx) {
 }
 
 void App::cleanUpPhysics() {
+  std::cout << "Cleaning up physics... ";
+
+  dynamicsWorld->removeRigidBody(chassis);
+  delete chassis->getMotionState();
+  delete chassis;
+
+  delete vehicleRaycaster;
+  delete vehicle;
+
+  delete debugDrawer;
   delete dynamicsWorld;
-  // major TODO !!
+  delete constraintSolver;
+  delete collisionConfiguration;
+  delete dispatcher;
+  delete overlappingPairCache;
+
+  std::cout << "Ok" << std::endl;
 }
 
 void App::updatePhysics(qint64 delta) {
@@ -1134,11 +1209,83 @@ void App::updatePhysics(qint64 delta) {
   vehicle->setSteeringValue(vehicleSteering, 1);
 
   dynamicsWorld->stepSimulation(delta/700.f, 10);
+
+  // TODO: the right time to call these?
+  for (int i = 0; i < vehicle->getNumWheels(); ++i) {
+    vehicle->updateWheelTransform(i, true);
+  }
 }
 
 void App::updateFps() {
   fps = QString("%1").arg(framesDrawn / 1.);
   framesDrawn = 0;
+}
+
+void App::drawVehicle(RenderContext& ctx, mat4& modelView, bool shadow) {
+  if (shadow)
+    renderer->setShader(plain);
+  else
+    renderer->setShader(env);
+
+  mat4 modelViewTop = modelView;
+  mat4 model; // Local transform.
+
+  // Truck.
+  btScalar matrix[16];
+  btTransform worldTransform = vehicle->getChassisWorldTransform();
+  worldTransform.setOrigin(chassisPos);
+  worldTransform.getOpenGLMatrix(matrix);
+  modelViewTop *= toMat4(matrix);
+  modelViewTop.rotate(180, vec3(0,0,1));
+  modelViewTop.scale(0.35, 0.35, 0.35);
+
+  model *= toMat4(matrix);
+  model.rotate(180, vec3(0,0,1));
+  model.scale(0.35, 0.35, 0.35);
+
+  if (shadow)
+    renderer->setUniformMat4("proj", ctx.sunProjection);
+  else
+    renderer->setUniformMat4("proj", ctx.projection);
+
+  renderer->setUniform3f("light_dir", ctx.sunDirection);
+  renderer->setUniformMat4("modelView", modelViewTop);
+  renderer->setUniformMat4("model", model);
+  renderer->drawMesh(truck);
+
+  // Chassis.
+  if (!shadow) {
+    renderer->setShader(chassisShader);
+    renderer->setUniformMat4("proj", ctx.projection);
+    renderer->setUniform3f("light_dir", ctx.sunDirection);
+    renderer->setUniformMat4("modelView", modelViewTop);
+    renderer->setUniformMat4("model", model);
+  }
+
+  renderer->drawMesh(chassisMesh);
+
+  // Wheels.
+  if (!shadow) {
+    renderer->setShader(tyre);
+    renderer->setTexture("texture", wheelTexture, 0);
+    renderer->setUniform3f("light_dir", ctx.sunDirection);
+    renderer->setUniformMat4("proj", ctx.projection);
+  }
+
+  for (int i = 0; i < vehicle->getNumWheels(); ++i) {
+    vehicle->getWheelInfo(i).m_worldTransform.getOpenGLMatrix(matrix);
+    modelViewTop = modelView;
+    modelViewTop *= toMat4(matrix);
+    modelViewTop.scale(0.4, 0.3, 0.3);
+
+    model.setToIdentity();
+    model *= toMat4(matrix);
+    model.scale(0.4, 0.3, 0.3);
+
+    renderer->setUniformMat4("modelView", modelViewTop);
+    renderer->setUniformMat4("model", model);
+    renderer->drawMesh(wheel);
+  }
 }
 
 void App::paintGL() {
@@ -1160,29 +1307,8 @@ void App::paintGL() {
       center,
       vec3(0,1,0));
     ctx.sunModelView = sunModelView;
-    mat4 modelViewTop = sunModelView;
 
-    renderer->setShader(plain);
-
-    btScalar matrix[16];
-    vehicle->getChassisWorldTransform().getOpenGLMatrix(matrix);
-    modelViewTop *= toMat4(matrix);
-    modelViewTop.rotate(90, vec3(1,0,0));
-    modelViewTop.rotate(180, vec3(0,1,0));
-    modelViewTop.scale(0.35, 0.35, 0.35);
-    renderer->setUniformMat4("proj", ctx.sunProjection);
-    renderer->setUniformMat4("modelView", modelViewTop);
-    renderer->drawMesh(truck);
-
-    for (int i = 0; i < vehicle->getNumWheels(); ++i) {
-      vehicle->updateWheelTransform(i, true);
-      vehicle->getWheelInfo(i).m_worldTransform.getOpenGLMatrix(matrix);
-      modelViewTop = sunModelView;
-      modelViewTop *= toMat4(matrix);
-      modelViewTop.scale(0.4, 0.3, 0.3);
-      renderer->setUniformMat4("modelView", modelViewTop);
-      renderer->drawMesh(wheel);
-    }
+    drawVehicle(ctx, sunModelView);
 
     glPopAttrib();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1205,7 +1331,7 @@ void App::paintGL() {
   if (vehicleCam) {
     btVector3 forward = vehicle->getForwardVector();
     camDir = camDir.lerp(forward, delta*0.001);
-    btVector3 pos = chassisPos - 4*camDir + btVector3(0,0,2.5);
+    btVector3 pos = chassisPos - 3*camDir + btVector3(0,0,2.1);
     btVector3 aboveVehicle = chassisPos + btVector3(0,0,0.5);
     modelView.lookAt(
       vec3(pos.x(), pos.y(), pos.z()),
@@ -1216,36 +1342,8 @@ void App::paintGL() {
     cam->setTransform(delta / 100., modelView);
 
   ctx.viewFrustum.update((ctx.projection * modelView).transposed());
-  mat4 modelViewTop = modelView;
 
-  renderer->setShader(diffuse);
-  btScalar matrix[16];
-  btTransform worldTransform = vehicle->getChassisWorldTransform();
-  worldTransform.setOrigin(chassisPos);
-  worldTransform.getOpenGLMatrix(matrix);
-  modelViewTop *= toMat4(matrix);
-  modelViewTop.rotate(90, vec3(1,0,0));
-  modelViewTop.rotate(180, vec3(0,1,0));
-  modelViewTop.scale(0.35, 0.35, 0.35);
-  renderer->setUniformMat4("proj", ctx.projection);
-  renderer->setUniformMat4("modelView", modelViewTop);
-  renderer->drawMesh(truck);
-
-  renderer->setShader(diffuseTextured);
-  renderer->setTexture("texture", wheelTexture, 0);
-
-  for (int i = 0; i < vehicle->getNumWheels(); ++i) {
-    if (!shadows) {
-      vehicle->updateWheelTransform(i, true);
-    }
-    vehicle->getWheelInfo(i).m_worldTransform.getOpenGLMatrix(matrix);
-    modelViewTop = modelView;
-    modelViewTop *= toMat4(matrix);
-    modelViewTop.scale(0.4, 0.3, 0.3);
-    renderer->setUniformMat4("proj", ctx.projection);
-    renderer->setUniformMat4("modelView", modelViewTop);
-    renderer->drawMesh(wheel);
-  }
+  drawVehicle(ctx, modelView, false);
 
   ctx.modelView = modelView;
   scene->draw(delta, ctx);
@@ -1289,6 +1387,8 @@ void App::paintGL() {
   renderer->disableShaders();
   glEnable(GL_DEPTH_TEST);
   //glDepthMask(GL_FALSE);
+  glActiveTexture(GL_TEXTURE0); // This line was added after hours of painful debugging.
+  glColor4f(1,1,1,1);
 
   if (drawDebugInfo) {
     // TODO: convert this crap to shader based.
@@ -1297,8 +1397,6 @@ void App::paintGL() {
       glEnable(GL_LINE_STIPPLE);
       glLineStipple(1, 0x00FF);
     }
-
-    glColor3f(1,1,1);
 
     DebugDrawer* dd = static_cast<DebugDrawer*>(dynamicsWorld->getDebugDrawer());
     dd->setModelViewProj(ctx.modelView, ctx.projection);
@@ -1317,8 +1415,6 @@ void App::paintGL() {
   }
 
   previousModelView = ctx.modelView;
-
-  glActiveTexture(GL_TEXTURE0); // This line was added after hours of painful debugging.
 
   if (infoShown) {
     glColor3f(0,0,0);
@@ -1672,7 +1768,7 @@ int main(int argc, char** args) {
   ConfigurationWindow win;
   win.resize(600, 200);
   App app(format, &win);
-  app.resize(1024, 768);
+  app.resize(WIN_WIDTH, WIN_HEIGHT);
   win.show();
   app.show();
   return qapp.exec();
