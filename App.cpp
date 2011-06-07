@@ -689,21 +689,17 @@ void App::initializeGL() {
     chassisShader = renderer->addShader("content/chassis.shader");
     env = renderer->addShader("content/env.shader");
 
-    /*diffuse = renderer->addShader("content/diffuse.shader");
-    diffuseTextured = renderer->addShader("content/diffuse-textured.shader");*/
     wheelTexture = renderer->addTexture("content/wheel-ambient.jpg");
-    // TODO: car texture
-    //skyDome = renderer->addMesh("content/sky-dome.mesh");
-    //scattering = renderer->addShader("content/scattering.shader");
 
     const char* cubemap_files[] = {"content/cubemap/1.jpg",
-      "content/cubemap/1.jpg",
-      "content/cubemap/1.jpg",
-      "content/cubemap/1.jpg",
-      "content/cubemap/1.jpg",
-      "content/cubemap/1.jpg",
+      "content/cubemap/2.jpg",
+      "content/cubemap/3.jpg",
+      "content/cubemap/4.jpg",
+      "content/cubemap/5.jpg",
+      "content/cubemap/6.jpg",
       };
     envCubemap = renderer->addCubemap(cubemap_files);
+    carTexture = renderer->addTexture("content/car-texture.png");
 
     blur = renderer->addShader("content/blur.shader");
     plain = renderer->addShader("content/plain.shader");
@@ -1243,12 +1239,17 @@ void App::drawVehicle(RenderContext& ctx, mat4& modelView, bool shadow) {
   model.rotate(180, vec3(0,0,1));
   model.scale(0.35, 0.35, 0.35);
 
-  if (shadow)
+  if (shadow) {
     renderer->setUniformMat4("proj", ctx.sunProjection);
-  else
+  }
+  else {
     renderer->setUniformMat4("proj", ctx.projection);
+    renderer->setUniform3f("cam_pos", ctx.camPosition);
+    renderer->setUniform3f("light_dir", ctx.sunDirection);
+    renderer->setTexture("sky", envCubemap, 0);
+    renderer->setTexture("texture0", carTexture, 1);
+  }
 
-  renderer->setUniform3f("light_dir", ctx.sunDirection);
   renderer->setUniformMat4("modelView", modelViewTop);
   renderer->setUniformMat4("model", model);
   renderer->drawMesh(truck);
@@ -1332,6 +1333,7 @@ void App::paintGL() {
     btVector3 forward = vehicle->getForwardVector();
     camDir = camDir.lerp(forward, delta*0.001);
     btVector3 pos = chassisPos - 3*camDir + btVector3(0,0,2.1);
+    ctx.camPosition = btToQt(pos);
     btVector3 aboveVehicle = chassisPos + btVector3(0,0,0.5);
     modelView.lookAt(
       vec3(pos.x(), pos.y(), pos.z()),

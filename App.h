@@ -127,6 +127,7 @@ private:
 };
 
 struct RenderContext {
+  vec3 camPosition;
   vec3 sunDirection;
   mat4 sunModelView;
   mat4 sunProjection;
